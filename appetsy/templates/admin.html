@@ -1,0 +1,176 @@
+# -*- coding: utf-8 -*-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link type="text/css" rel="stylesheet" href="/public/main.css" />
+    <link type="text/css" rel="stylesheet" href="/public/icons.css" />
+    <link type="text/css" rel="stylesheet" href="/public/forms.css" />
+    <title>Admin</title>
+
+    <script type="text/javascript" src="/public/scripts/date.js"></script>
+    <script type="text/javascript" src="/public/scripts/jquery.js"></script>
+    <script type="text/javascript" src="/public/scripts/jquery-color.js"></script>
+</head>
+<body>
+<div style="margin-left: 24px;">
+
+<div  style="display: inline-block; width: 60%;">
+    <h1>Params</h1>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".param input").keypress(function() {
+                $(".param button").removeAttr("disabled", "disabled");
+            });
+    
+            $(".param button").click( function() {
+                $.get("/admin/set_key?key=" + $(".param input").val(), function(){
+                    $(".param button").attr("disabled", "disabled");
+                });
+                return false;
+            });
+        });
+    </script>
+    
+    <table>
+        % for param in params:
+            <tr class="param">
+                <td>${param.key().name()}</td>
+                <td><input type="text" value="${param.value}" size="30" /></td>
+                <td><button disabled="disabled">Update</button></td>
+            </tr>
+        % endfor
+    </table>
+</div>
+
+
+<div style="display: inline-block;">
+    <h1>Shops</h1>
+    <table>
+        % for shop in shops:
+            <tr>
+                <td><img src="${(shop.image_url or "").replace("75x75", "25x25")}"/></td>
+                <td>${shop.title}</td>
+                <td>${shop.id}</td>
+                <td>
+                    <a href="/cron/shop?shop=${shop.id}">sync shop fans</a><br />
+                    <a href="/cron/items?shop=${shop.id}&forced=1">sync items</a><br />
+                    <a href="#" onclick="$.ajax({type: 'delete', url: '/admin/shops/${shop.id}'}); return false;">delete</a>
+                </td>
+            </tr>
+        % endfor
+    </table>
+</div>
+
+
+
+
+
+
+
+<div style="display: inline-block; width: 60%;">
+    <h1>Users</h1>
+    
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $(".user input").keypress(function() {
+                $(".user button").removeAttr("disabled", "disabled");
+            });
+    
+            $(".user button").click( function() {
+                $.get("/admin/new_user?email=" + $(".user .email").html() + "&greeting=" + $(".user input").val(),
+                      function(){
+                            $(".user button").attr("disabled", "disabled");
+                      });
+                return false;
+            });
+        });
+    </script>
+    
+    <table>
+        <tr>
+            <th>E-mail</th>
+            <th>Shops</th>
+            <th>Greeting</th>
+        </tr>
+    
+        % for user in users:
+            <tr class="user">
+                <td><div class="email">${user.email}</div></td>
+                <td>
+                    % for shop in user.shops:
+                        <div>
+                            ${shop.title}
+                        </div>
+                    % endfor
+                </td>
+                <td><input type="text" value="${user.greeting}" /></td>
+                <td><button disabled="disabled">Update</button></td>
+            </tr>
+        % endfor
+    </table>
+    
+    <h1>New User</h1>
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $("#new_user button").click( function() {
+                $.get("/admin/new_user?email=" + $("#new_user input[name=email]").val()
+                                + "&shop_id=" + $("#new_user input[name=shop_id]").val()
+                                + "&greeting=" + $("#new_user input[name=greeting]").val(),
+                      function(){
+                            window.location.reload();
+                      });
+                return false;
+            });
+        });
+    </script>
+
+    <table id="new_user">
+        <tr>
+            <td>e-mail</td>
+            <td><input name="email" /></td>
+        </tr>
+        <tr>
+            <td>etsy shop id</td>
+            <td><input name="shop_id"></td>
+        </tr>
+        <tr>
+            <td>greeting</td>
+            <td><input name="greeting" /></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: right">
+                <button>Add</button>
+            </td>
+    </table>
+</div>
+
+
+<div  style="display: inline-block;">
+    <h1>Etsy requests made</h1>
+    <table>
+        % for count in etsy_request_count:
+            <tr>
+                <td>${count["date"].strftime("%b %d.")}</td>
+                <td>${count["count"]}</td>
+            </tr>
+        % endfor
+    </table>
+    
+    <h1>Memcache stats</h1>
+    <table>
+        % for stat in memcache_stats:
+            <tr>
+                <td>${stat}</td>
+                <td>${memcache_stats[stat]}</td>
+            </tr>
+        % endfor
+    </table>
+</div>
+
+
+
+</div>
+</body>
+</html>

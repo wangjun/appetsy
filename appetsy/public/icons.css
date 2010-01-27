@@ -1,0 +1,113 @@
+.dancing_75x75 {
+    display: inline-block;
+    width: 75px;
+    height: 75px;
+    background-image: url(/public/bears.png);
+}
+
+.dancing_50x50 {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    background-image: url(/public/bears.png);
+    background-position: -75px -25px;
+}
+
+.dancing_25x25 {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    background-image: url(/public/bears.png);
+    background-position: -125px -50px;
+}
+
+
+.secret_75x75 {
+    display: inline-block;
+    width: 75px;
+    height: 75px;
+    background-image: url(/public/bears.png);
+    background-position: 0 -75px;
+}
+
+.secret_50x50 {
+    display: inline-block;
+    width: 50px;
+    height: 50px;
+    background-image: url(/public/bears.png);
+    background-position: -75px -100px;
+}
+
+.secret_25x25 {
+    display: inline-block;
+    width: 25px;
+    height: 25px;
+    background-image: url(/public/bears.png);
+    background-position: -125px -125px;
+}
+
+.pale_star {
+    padding: 0;
+    margin-right: -4px;
+    width: 24px;
+    display: inline-block;
+    background: url(/public/star_pale.png)
+}
+
+.stars {
+    background: url(/public/star.png);    
+}
+
+
+.bear-pale {
+    height: 40px;
+    background: url(/public/bear_pale.png) repeat-x;
+}
+
+.bear {
+    height: 40px;
+    background: url(/public/bear.png) repeat-x;
+}
+
+.king_bear {
+    display: inline-block;
+    background: url("/public/bear_king.png");
+    height: 40px;
+    
+}
+
+img.medium_icon {
+    vertical-align: middle;
+    height: 50px;
+    width: 50px;
+}
+
+
+#icon_view_icon {
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+    vertical-align: middle;
+    height: 32px;
+    width: 42px;
+    background-image: url(/public/icon_view.png);
+}
+
+#icon_view_icon.running {
+    background-image: url(/public/icon_view_thinking.gif)
+}
+
+#list_view_icon {
+    display: inline-block;
+    cursor: pointer;
+    text-decoration: none;
+    vertical-align: middle;
+    height: 32px;
+    width: 33px;
+    background-image: url(/public/list_view.png);
+}
+
+#list_view_icon.running {
+    cursor: pointer;
+    background-image: url(/public/list_view_thinking.gif)
+}

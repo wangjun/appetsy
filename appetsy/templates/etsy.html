@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="defs.html"/>
+
+${defs.head(u"Mmmm... Etsy!")}
+
+<script type="text/javascript" src="/public/scripts/popups.js"></script>
+
+<div id="fan_info" class="popup"></div>
+
+<div style="margin: 12px;">
+    <h1>
+        <a style="float: right" href="/">
+            Back >>
+        </a>
+        Fans
+        <span class="description">(pavisam ${fan_count})</span>
+    </h1>
+    <table id="iconlist" width="100%">
+        <% import appetsy %>
+        % for i, date in enumerate(dates):
+            <tr class="${["odd", "even"][i % 2]}">
+                <td class="title">
+                    % if date["cur_date"] == today:
+                        Today
+                    % elif date["cur_date"] == yesterday:
+                        Yesterday
+                    % else:
+                        <div style="color: silver">${date["cur_date"].strftime("%b")}</div>
+                        <div style="color: gray">${date["cur_date"].strftime("%d")}</div>
+                    % endif
+                </td>
+                <td class="icons">
+                    % for fan in date["fans"]:
+                        ${defs.fanpic(fan.fan, 75)}
+                    % endfor
+                </td>
+            </tr>
+        % endfor
+    </table>
+</div>
+
+</body>
+</html>

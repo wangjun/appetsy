@@ -1,0 +1,50 @@
+form *, button {
+    font-family:Georgia;
+    font-size:14px;
+    font-weight:normal;
+}
+
+
+
+
+/* inline form */
+form.inline {
+    display: inline-block;
+}
+
+form.inline * {
+    font-family: inherit;
+    border: 0;
+    padding: 0;
+}
+
+form.inline input {
+    padding: 3px;
+    color: inherit;
+}
+
+form.inline input:hover, form.inline.editing input {
+    background: #FAFA92;
+}
+
+form.inline button {
+    padding: 2px 3px;
+    border: 1px solid silver;
+    -moz-border-radius: 4px;
+    font-size: 0.8em;
+    display: none;
+}
+
+form.inline.editing button {
+    display: inline;
+}
+
+form.inline button[type=submit] {
+    background: #A0A9E5;
+    color: #fff;
+}
+
+form.inline button[type=reset] {
+    background: #E0E0E0;
+    color: #666;
+}

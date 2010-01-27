@@ -1,0 +1,113 @@
+# -*- coding: utf-8 -*-
+
+
+<form id="goods_form" action="/goods/${item.key()}" method="post" style="width: auto;">
+    <input type="hidden" name="_method" value="put" />
+    <table>
+        <tr>
+            <td><label for="good_name">Description:</label></td>
+            <td><input type="text" name="good_name" id="good_name" value="${item.name}" size="50"/></td>
+        </tr>
+        <tr>
+            <td><label for="creation_date">Date:</label></td>
+            <td>
+                <input type="hidden" name="creation_date" id="edit_creation_date" value="${item.created.strftime("%b-%d-%Y")}">
+                <input type="text"
+                       id="edit_creation_date_edit"
+                       value="${item.created.strftime("%d-%b")}"
+                       size="12"
+                       onchange="goods_preview_date('#edit_creation_')" />
+                <span id="edit_creation_date_preview" class="description">&nbsp;</span>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="listing_key">Etsy:</label></td>
+            <td>
+                <select class="bearselect" name="listing_key" style="width: 500px;">
+                    <option value="" style="height: 2em; ">Not posted</option>
+
+                    % if item.listing:
+                            <option value="${item.listing.key()}" selected = "selected"
+                                    style="background-image: url(${item.listing.image_url});">
+                                ${item.listing.title}
+                            </option>
+                    % endif
+
+                    <%
+                        import itertools
+                    %>
+                    % for group in itertools.groupby(listings, lambda entry: entry.state):
+                        <%
+                            if group[0] == "active":
+                                label = u"Active"
+                            elif group[0] == "sold_out":
+                                label = u"Sold"
+                            else:
+                                label = group[0]
+                        %>
+                        <optgroup label="${label}">
+                        % for listing in group[1]:
+                            <option value="${listing.key()}"
+                                    style="background-image: url(${listing.image_url});">
+                                ${listing.title}
+                            </option>
+                        % endfor
+                        </optgroup>
+                    % endfor
+                    
+                </select>
+            </td>
+        </tr>
+
+        <tr>
+            <td>Status:</td>
+            <td>
+                <select name="status" id="edit_good_status" value="${item.status}" onchange="edit_show_sold_details()">
+                    <option value="ordered" ${"selected=\"selected\"" if item.status == "ordered" else ""}>Ordered</option>
+                    <option value="in_stock" ${"selected=\"selected\"" if item.status == "in_stock" else ""}>In stock</option>
+                    <option value="sold" ${"selected=\"selected\"" if item.status == "sold" else ""}>Sold</option>
+                </select>
+            </td>
+        </tr>
+
+        <tr id="edit_sale_date_row" style="${"display: none" if item.status != "sold" else ""}">
+            <td><label for="sale_date">When:</label></td>
+            <td>
+                <input type="hidden" name="sale_date" id="edit_sale_date" value="${item.sold.strftime("%b-%d-%Y") if item.sold else ""}">
+                <input type="text"
+                       id="edit_sale_date_edit"
+                       size="12"
+                       value="${item.sold.strftime("%d-%b") if item.sold else ""}"
+                       onchange="goods_preview_date('#edit_sale_')" />
+                <span id="edit_sale_date_preview" class="description">&nbsp;</span>
+            </td>
+        </tr>
+        <tr id="edit_sale_price_row" style="${"display: none" if item.status != "sold" else ""}">
+            <td><label for="price">Price:</label></td>
+            <td><input type="text" name="price" id="price" size="4"  value="${item.price if item.price else ""}" /></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: right">
+                <button id="cancel_good" type="button" onclick="javascript:document.location='/'">Cancel</button>
+                <button id="save_good" type="submit">Save</button>
+            </td>
+        </tr>
+    </table>
+</form>
+
+<script type="text/javascript">
+    function goods_preview_date(prefix) {
+        var d1 = Date.parse($(prefix + "date_edit").val());
+        if (d1) {
+            $(prefix+"date_preview").html(d1.toString('dddd, MMMM d, yyyy'));
+            $(prefix+"date").val(d1.toString('d-MMM-yyyy'));
+        } else {
+            $(prefix+"date_preview").html("");
+            $(prefix+"date").val("");
+        }
+    }
+    
+
+    goods_preview_date("#edit_creation_");
+    goods_preview_date("#edit_sale_");
+</script>

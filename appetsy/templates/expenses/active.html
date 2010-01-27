@@ -1,0 +1,40 @@
+# -*- coding: utf-8 -*-
+<table id="recent_purchases">
+    % if not expenses:
+        <tr>
+            <td colspan="3">
+                <div class="description">No spenditures recently, heh</div>
+            </td>
+        </tr>
+    % else:
+        <%
+            stripes = ["odd", "even"]
+            odd = 1
+        %>
+        % for expense in expenses:
+            <% odd = 1 - odd %>
+            <tr class="${stripes[odd]}">
+                <td class="date">${expense.purchase_date.strftime("%b %d")}</td>
+
+                <td title="${expense.name}">
+                    <a href="/edit/${expense.key()}"
+                       class="index active_expense_link"
+                       key="${expense.key()}">
+                        ${expense.name}
+                    </a>
+                </td>
+                <td class="money" width="1%">${expense.price} Ls</td>
+            </tr>
+        % endfor
+    % endif
+</table>
+
+<script type="text/javascript">
+    var expenses_spotlight = null; // will be replaced by controller
+    if (expenses_spotlight) {
+        expenses_spotlight = $("a.index[key=" + expenses_spotlight + "]");
+        var line = expenses_spotlight.parent().parent();
+        var bg = line.css("backgroundColor");
+        line.animate({backgroundColor: "yellow"}, "fast").animate({backgroundColor: bg}, 1500);
+    }
+</script>

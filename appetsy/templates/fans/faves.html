@@ -1,0 +1,42 @@
+# -*- coding: utf-8 -*-
+
+<%def name="image(url)">
+    % if url == "veikals":
+        <img style="height: 50px; width: 50px" src="${(shop.image_url or "").replace("75x75", "50x50")}" /> \
+    % elif "slepens_" in url:
+        <div class="secret_50x50"></div>
+    % elif "dejo_" in url:
+        <div class="dancing_50x50"></div> 
+    % else:
+        <img style="height: 50px; width: 50px" src="${url.replace("75x75", "50x50")}" /> \
+    % endif
+</%def>
+
+
+<%def name="list(faves)">
+    % for fave in faves:
+        % if fave.image_url == "veikals" or "slepens_" in fave.image_url:
+            ${image(fave.image_url)}
+        % else:
+            <div class="icon">
+                    <a key="${fave.str_key}" class="popup_result" href="/fans/${fave.str_key}" style="margin-right: -4px">
+                        ${image(fave.image_url)}
+                        ${fave.user_name}
+                    </a>
+            </div>
+        % endif
+    % endfor
+</%def>
+
+
+% if today:
+    ${list(today)}
+% endif
+
+% if other_days:
+    <div class="splitter">
+        <p>Previously (${len(other_days)})</p>
+    </div>
+
+    ${list(other_days)}
+% endif

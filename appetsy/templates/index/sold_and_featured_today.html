@@ -1,0 +1,49 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+% if frontpaged_today:
+        % for frontpaged in frontpaged_today:    
+            <%
+                if frontpaged.showing_now:
+                    style = "background: magenta"
+                    url = "http://etsy.com/"
+                else:
+                    style = ""
+                    url = "#"
+            %>
+
+        
+            <a href="${url}"
+               target="_blank"
+               class="highlights"
+               style="${style}">
+
+                <span class="highlight_description"
+                      style="font-size: 1.2em; letter-spacing: -1px; padding-right: 8px;">
+                    Firstpage
+                </span>
+                <img src="${frontpaged.listing.image_url}" class="medium_icon" />
+            </a>
+        % endfor
+% endif
+
+% if sold_today:
+    <a href="http://www.etsy.com/sold_orders.php"
+       target="_blank"
+       class="highlights"
+       style="background: #84C4B0;">
+
+        <span class="highlight_description"
+              style="font-size: 1.2em; letter-spacing: -1px; padding-right: 8px;">
+            Sold
+        </span>
+
+        % for listing in sold_today:
+            <img src="${listing.image_url}" class="medium_icon" />
+        % endfor
+    </a>
+% endif
+
+% if sold_today or frontpaged_today:
+    <div style="height: 12px">&nbsp;</div>
+% endif

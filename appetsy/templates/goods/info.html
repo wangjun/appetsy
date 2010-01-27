@@ -1,0 +1,42 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+${defs.head(listing.title)}
+
+
+<h1>${listing.title}</h1>
+
+<table>
+    <tr>
+        <td rowspan="2">
+            <img src="${defs.listing_image(listing, 75)}" style="float: left"/>
+        </td>
+        <td>
+            ${listing.faves} fans, ${listing.views} views
+        </td>
+    </tr>
+</table>
+
+
+
+<table style="width: auto">
+    <%
+        stripes = ["odd", "even"]
+        odd = 0
+    %>
+    % for item_fan in fans:
+            <% odd = 1 - odd %>
+            <tr class="${stripes[odd]}">
+                <td>${defs.fanpic(item_fan.fan, 75)}</td>
+                <td>${item_fan.fan.user_name}</td>
+                <td>
+                    <a href="/fans/${item_fan.fan.key()}">
+                        Show other favorites
+                    </a>
+                </td>
+            </tr>
+    % endfor
+</table>
+
+</body>
+</html>

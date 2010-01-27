@@ -1,0 +1,50 @@
+# -*- coding: utf-8 -*-
+
+
+
+<table style="width: 100%; margin-top: 12px;">
+    <tr>
+        <td>
+            <div class="stars" style="width: ${(weekday_count+1) * 24}px; height: ${day_max * 24}px;">
+                % for i in range(weekday_count + 1):
+                    <div class="pale_star" style="height: ${(day_max - len(days.get(i, []))) * 24}px;">&nbsp;</div>
+                % endfor
+                <!--
+                <div style="z-index: 100; height: 100%; width: 72px; position: absolute; right: 0; background: #2E9994; top: 0; opacity: 0.1; border-left: 2px solid red;">&nbsp</div>
+                -->
+            </div>
+        </td>
+        <td style="vertical-align: middle; font-size: 1.2em; white-space: nowrap; text-align: left; padding-left: 12px; width: 100%; color: #666;">
+            <div  style="color: #aaa;">
+                ${len(goods_week)} /
+                
+                <form id="plans_form" action="/plans/update" method="post" class="inline">
+                    <input id="planned_production" type="text" name="weeks_plan" value="${planned}" style="width: 1.5em" />
+                    <button type="submit">Save</button>
+                    <button type="reset">Cancel</button>
+                </form>
+            </div>
+            
+            <div style="color: #ccc;">
+                % if percentage_complete:
+                    ${percentage_complete}% at the moment
+                % else:
+                    Hiatus!
+                % endif
+            </div>
+        </td>
+    </tr>
+</table>
+
+<div style="width: 360px; margin-top: 12px;">
+    <div style="text-align: right; margin-bottom: 6px; padding-right: 8px;">
+        <% from math import floor %>
+        <div class="king_bear" style="width: ${floor(total_money / 2000) * 32}px;"></div>
+    </div>
+    
+    
+    % for row in range(10):
+        <% width = "%.2f%%" % (min(max((total_money % 2000) - row * 200, 0), 200) / 200.0 * 100) %> \
+        <div class="bear-pale"><div class="bear" style="width: ${width};">&nbsp;</div></div>
+    % endfor
+</div>

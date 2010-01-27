@@ -1,0 +1,141 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+${defs.head(u"Psssst!")}
+
+<%
+    import cgi, appetsy
+    import datetime as dt
+
+    today = appetsy.today(current_shop)
+    next_secret = appetsy.zero_timezone(dt.datetime(2009, 1, 28, 0, 0))
+    
+    
+    while next_secret < today:
+        next_secret += dt.timedelta(days = 191)
+
+    zero_datetime = appetsy.zero_timezone(dt.datetime(2008, 7, 23, 0, 0))
+    days_since_zero = (zero_datetime - today).days
+%>
+
+<script type="text/javascript" src="/public/scripts/index.js"></script>
+<script type="text/javascript" src="/public/scripts/popups.js"></script>
+<script type="text/javascript" src="/public/scripts/jquery-debug.js"></script>
+
+<script type="text/javascript" src="/public/scripts/raphael.js"></script>
+
+<div id="fan_info" class="popup" style="padding: 0; margin: 0"></div>
+
+<span id="status">Refreshing page...</span>
+
+<div id="user_line">
+    
+    <a href="/etsy/">Etsy</a>
+    
+    % if user.email in ["em.suuna@gmail.com", "toms.baugis@gmail.com"]:
+        <p>
+            <span id="appetsy_dienas">
+                ${(next_secret - today).days}
+                <img src="/public/karogs.png" />
+            </span>
+            
+            <span class="popup">
+                Vēl palikušas: <b>${days_since_zero}</b> dienas.
+                Nākamie slepenie svētki: <b>${next_secret.strftime("%b %d")}</b>
+            </span>
+            
+            <script type="text/javascript">
+                $("#appetsy_dienas").hover(
+                    function(){                        
+                        $(this).next().fadeIn();
+                    },
+                    
+                    function(){
+                        var div = $(this).next();                        
+                        setTimeout(function(){div.fadeOut()}, 1000);
+                    }
+                );
+            </script>
+        </p>
+    % endif                                 
+
+    <p style="float: right">
+        Hey ${user.greeting}! <a href="${logout_url}"> Log out</a>
+    </p>
+    
+    % if len(user.shops) > 1:
+        <p style="float: right">
+            <select onchange="javascript:changeShop(this.value)">
+                % for shop in user.shops:
+                    <option value="${shop.id}" ${'selected="selected"' if shop.id == current_shop.id else ""}>${shop.title}</option>
+                % endfor
+            </select>
+        </p>
+    % endif
+</div>
+
+<div id="fans_today">${fans_today}</div>
+
+<script type="text/javascript">
+    var stats = ${recent_views_json};
+</script>
+
+<div id="right_side">
+    <div id="recent_views" style="width: 380px; height: 150px; margin-left: -20px;"></div>
+    <div id="progress_box">
+        ${progress_box}
+    </div>
+</div>
+
+<div id="contents">
+    <div id="sold_and_featured">${sold_featured}</div>
+
+    <div class="tabpages">
+        <ul class="tabs">
+            <li><a id="overview_tab" page="overview_page" class="active">Overview</a></li>
+            <li><a id="balance_tab" page="balance_page">Balance</a></li>
+        </ul>
+    
+
+
+        <div class="pages">
+            <div class="page" id="overview_page">
+                <div style="float: right; text-align: right">
+                    <button id="add_good_button">+</button>
+                </div>
+
+                <div id="active_goods">${active_goods}</div>
+            
+            
+                <h1>
+                    <div style="float: right; text-align: right">
+                        <button id="add_expense_button">+</button>
+                    </div>
+                    Recent purchases
+                </h1>
+            
+                <div id="active_expenses">${active_expenses}</div>
+            </div>
+            <div class="page" id="balance_page" style="display:none">
+                <div id="balance">${balance}</div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <div id="add_good" class="popup">
+        <%include file="/goods/new.html"/>
+    </div>
+    <div id="add_expense" class="popup">
+        <%include file="expenses/new.html"/>
+    </div>
+    
+    <div id="edit_good_form" class="popup"></div>
+    <div id="edit_expense_form" class="popup"></div>
+    <div id="edit_plans_form" class="popup" style="padding: 2px;"></div>
+
+</div>
+
+</body>
+</html>

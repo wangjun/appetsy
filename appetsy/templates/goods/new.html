@@ -1,0 +1,52 @@
+# -*- coding: utf-8 -*-
+
+<form action="/goods" method="post" id="add_good_form">
+    <table>
+        <tr>
+            <td width="1%"><label for="good_name">Description:</label></td>
+            <td><input type="text" name="good_name" id="good_name" style="width: 100%" /></td>
+        </tr>
+        <tr>
+            <td><label for="creation_date">Date:</label></td>
+            <td>
+                <input type="hidden" name="creation_date" id="creation_date" value="" />
+                <input type="text"
+                       id="creation_date_edit"
+                       size="12"
+                       onchange="preview_date('#creation_')" />
+                <span id="creation_date_preview" class="description">&nbsp;</span>
+            </td>
+        </tr>
+        <tr>
+            <td>Status:</td>
+            <td>
+                <select name="status" id="good_status" value="in_stock" onchange="show_sold_details()">
+                    <option value="ordered">Ordered</option>
+                    <option value="in_stock" selected="selected">In stock</option>
+                    <option value="sold">Sold</option>
+                </select>
+            </td>
+        </tr>
+        <tr id="sale_date_row" style="display: none">
+            <td><label for="sale_date">When:</label></td>
+            <td>
+                <input type="hidden" name="sale_date" id="sale_date" value="" />
+                <input type="text"
+                       id="sale_date_edit"
+                       size="12"
+                       onchange="preview_date('#sale_')" />
+                <span id="sale_date_preview" class="description">&nbsp;</span>
+            </td>
+        </tr>
+        <tr id="sale_price_row" style="display: none">
+            <td><label for="price">Price:</label></td>
+            <td><input type="text" name="price" id="price" size="4" /></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: right">
+                <button id="cancel_new_good" type="button" onclick="$('#add_good').hide(); $('#add_good_button').show();">Cancel</button>
+                <button id="save_new_good" type="submit">Add</button>
+            </td>
+        </tr>
+    </table>
+</form>

@@ -1,0 +1,12 @@
+cron:
+- description: shop fans
+  url: /cron/shop
+  schedule: every 15 minutes
+
+- description: item fans
+  url: /cron/items
+  schedule: every 1 minutes
+
+- description: frontpage items
+  url: /cron/frontpage
+  schedule: every 10 minutes

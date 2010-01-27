@@ -1,0 +1,43 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+<table>
+    <tr>
+        <td style="width: 1%">
+            <div id="fave_totals">
+                % if shopfave_count or itemfave_count:
+                    <a id="person_link">
+                        ${shopfave_count}
+                    </a>
+                % endif
+                
+                % if itemfave_count:
+                    <br />
+                    <a id="item_link" style="color: #1D8483">
+                        +${itemfave_count}
+                    </a>
+                % endif
+            </div>
+        </td>
+        <td>
+            <div id="person_box" style="display: none">
+                % for fan in shopfaves:
+                    <a class="fan_clicker" key="${fan["key"]}">
+                        ${defs.fan_image_by_url(fan["image_url"], 50)}
+                        <div class="item_counter">${fan["count"] if fan["count"] else ""}</div>
+                    </a>
+                % endfor
+            </div>
+            
+            <div id="item_box" style="display: none">
+                % for listing in listingfaves:
+                    <a class="fan_clicker" key="${listing["key"]}">                        
+                        <img src="${(listing.get("image_url", "") or "").replace("75x75", "50x50")}" />
+                        <div class="item_counter">${listing["count"] if listing["count"] else ""}</div>
+                    </a>
+                % endfor 
+            </div>
+        </td>
+    </tr>
+</table>
+

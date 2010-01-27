@@ -1,0 +1,23 @@
+application: kush-nosleepums
+version: 1
+runtime: python
+api_version: 1
+default_expiration: "1d"
+
+handlers:
+- url: /public
+  static_dir: appetsy/public
+  expiration: "1d"
+
+- url: /cron/.*
+  script: appetsy/cron.py
+  login: admin
+
+- url: /admin.*
+  script: appetsy/admin.py
+  login: admin
+
+- url: .*
+  script: appetsy/main.py
+  login: required
+

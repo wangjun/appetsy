@@ -1,0 +1,45 @@
+# -*- coding: utf-8 -*-
+<h1>
+    ${etsy_count}+${unlisted_count} active goods
+</h1>
+
+% if not goods:
+    <div class="description">No goods!</div>
+% else:
+
+    % for good in goods:
+        <div class="good-tile ${"ordered" if good.status == "ordered" else ""}">
+            <div class="good-tile-icon">
+                % if good.listing:
+                    <img src="${good.listing.image_url.replace("50x50", "75x75")}" />
+                % endif
+            </div>
+
+            <div class="good-tile-title">
+                <a href="/goods/${good.key()}/edit"
+                   class="index active_good_link ${"inactive" if good.listing and good.listing.state != "active" else ""}"
+                   key="${good.key()}">
+                    ${good.name}
+                </a>
+
+                <div>${"&lt;statuss: %s&gt;" % good.listing.state if good.listing and good.listing.state != "active" else ""}</div>
+
+                <div class="good-tile-date">${good.created.strftime("%b %d")}</div>
+            </div>
+    
+        </div>
+
+    % endfor
+% endif
+
+
+
+<script type="text/javascript">
+    var goods_spotlight = null; // will be replaced by controller
+    if (goods_spotlight) {
+        goods_spotlight = $("a.index[key=" + goods_spotlight + "]");
+        var line = goods_spotlight.parent().parent();
+        var bg = line.css("backgroundColor");
+        line.animate({backgroundColor: "yellow"}, "fast").animate({backgroundColor: bg}, 1500);
+    }
+</script>

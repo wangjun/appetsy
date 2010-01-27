@@ -1,0 +1,63 @@
+<%def name="head(title)">
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+            "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
+    <head>
+        <link type="text/css" rel="stylesheet" href="/public/main.css" />
+        <link type="text/css" rel="stylesheet" href="/public/icons.css" />
+        <link type="text/css" rel="stylesheet" href="/public/forms.css" />
+        <title>${title}</title>
+
+        <script type="text/javascript" src="/public/scripts/date.js"></script>
+        <script type="text/javascript" src="/public/scripts/jquery.js"></script>
+        <script type="text/javascript" src="/public/scripts/jquery-color.js"></script>
+
+        <script type="text/javascript" src="/public/scripts/fan_popup.js"></script>
+    </head>
+    <body>
+</%def>
+
+
+
+<%def name="fanpic(fan, size)">
+    % if fan.user_name:
+        <a class="fan_clicker"
+           key="${fan.key()}">
+            % if "dejo_" in fan.image_url:
+                <div class="${"dancing_%dx%d" % (size, size)}"></div>
+            % else:
+                <img src="${fan.image_url.replace("75x75", "%dx%d" % (size, size))}" />
+            % endif
+            ${fan.user_name}
+        </a>
+    % else:
+        <a class="secret">
+            <div class="${"secret_%dx%d" % (size, size)}"> </div>
+            Secret!
+        </a>
+    % endif
+</%def>
+
+
+
+<%def name="fan_image(fan, size)">
+    % if "slepens_" in fan.image_url:
+        <div class="${"secret_%dx%d" % (size, size)}"></div>    
+    % elif "dejo_" in fan.image_url:
+        <div class="${"dancing_%dx%d" % (size, size)}"></div>
+    % else:
+        <img src="${fan.image_url.replace("75x75", "%dx%d" % (size, size))}" />
+    % endif
+</%def>
+
+<%def name="fan_image_by_url(fan_image, size)">
+    % if "slepens_" in fan_image:
+        <div class="${"secret_%dx%d" % (size, size)}"></div> \
+    % elif "dejo_" in fan_image:
+        <div class="${"dancing_%dx%d" % (size, size)}"></div> \
+    % else:
+        <img style="height: ${size}px; width: ${size}px" src="${fan_image.replace("75x75", "%dx%d" % (size, size))}" /> \
+    % endif
+</%def>
+
+<%def name="listing_image(listing, size)">${listing.image_url.replace("50x50", "%dx%d" % (size, size))}</%def>

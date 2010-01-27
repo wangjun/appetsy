@@ -1,0 +1,37 @@
+# -*- coding: utf-8 -*-
+
+<form action="/expenses" method="post" id="add_expense_form" name="add_expense_form">
+    <table>
+        <tr>
+            <td><label for="name">Description:</label></td>
+            <td>
+                <input type="text" name="name" id="expense_name" style="width: 100%"  />
+            </td>
+        </tr>
+        <tr>
+            <td><label for="expense_date">When:</label></td>
+            <td>
+                <input type="hidden" name="date" id="expense_date" value="" />
+                <input type="text"
+                       id="expense_date_edit"
+                       size="12"
+                       onchange="preview_date('#expense_')" />
+                <span id="expense_date_preview" class="description">&nbsp;</span>
+            </td>
+        </tr>
+        <tr>
+            <td><label for="price">Price:</label></td>
+            <td>
+                <input type="text"
+                       name="price"
+                       size="5" />
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: right">
+                <button id="cancel_new_expense" type="button" onclick="$('#add_expense').hide(); $('#add_expense_button').show();">Cancel</button>
+                <button id="save_new_expense" type="submit">Add</button>
+            </td>
+
+    </table>
+</form>

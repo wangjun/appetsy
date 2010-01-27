@@ -1,0 +1,19 @@
+# -*- coding: utf-8 -*-
+% if item.kind() == "Fans":
+    <a href="http://${item.user_name}.etsy.com/" target="_blank">
+% else:
+    <a href="http://www.etsy.com/view_listing.php?listing_id=${item.id}" target="_blank">
+% endif
+
+    % if "slepens_" in item.image_url:
+        <div class="secret_75x75"></div>
+    % elif "dejo_" in item.image_url:
+        <div class="dancing_75x75"></div> 
+    % else:
+        <img style="height: 75px; width: 75px" src="${item.image_url.replace("50x50", "75x75")}" />
+    % endif
+    
+    <div style="font-size: 0.8em; text-align: left; color: #aaa; height: 3em">${item.title}</div>
+
+</a>
+

@@ -1,0 +1,98 @@
+# -*- coding: utf-8 -*-
+<%
+    stripes = ["odd", "even"]
+    # this used to be localized, so keeping the list for now
+    months = [u"January", u"February", u"March", u"April", u"May",
+              u"June", u"July", u"August", u"September",
+              u"October", u"November", u"December"]
+    odd = 0
+    prev_date = None
+%>
+
+<div id="balance_graph" style="float: right;"></div>
+<script type="text/javascript">
+    var balance_stats = [
+        <% sorted_keys = sorted(prev.keys()) %>
+        % for key in sorted_keys:
+            {'month': "${months[key.month-1]}",
+             'action': function(){loadBalance(null, null, '${key.strftime("%d-%b-%Y")}')},
+             'total': ${prev[key][0]},
+             'rel_total': ${prev[key][1]}
+            },
+        % endfor
+    ]
+    
+    balanceGraph.plot(balance_stats);
+</script>
+
+<table width="100%">
+
+    % for date in dates:
+        <tr>
+            <td class="title" colspan = "5">
+                <div style="color: silver">${months[date["month"]-1]}</div>
+            </td>
+        </tr>
+            
+        % for money in date["moneys"]:
+            <%
+                if money["date"] != prev_date:
+                    odd = 1 - odd
+                
+                prev_date = money["date"]
+                
+            %>
+            <tr class="${stripes[odd]}">
+                <td class="date">${money["date"].strftime("%b %d")}</td>
+                <td style="padding: 0; width: 30px;">
+                    % if money.get("listing"):
+                        <a class="fan_clicker active_goods" key="${money["listing"].key()}">
+                            <img src="${money["listing"].image_url.replace("50x50", "25x25")}" />
+                        </a>
+                    % endif
+                </td>
+                <td>
+                    <a href="/edit/${money["key"]}"
+                       class="balance ${"active_expense_link" if money["price"] < 0 else "active_good_link"}"
+                       key="${money["key"]}">
+                        ${money["name"]}
+                    </a>
+                </td>
+                
+                <td class="money" style="white-space: nowrap" width="1%">${"%.2f Ls" % money["price"] if money["price"] < 0 else ""}</td>
+                <td class="money" style="white-space: nowrap" width="1%">${"%.2f Ls" % money["price"] if money["price"] > 0 else ""}</td>
+            </tr>
+
+            
+        % endfor
+
+        <tr class="sum">
+            <td colspan="3" style="text-align: right" class="money">
+                Total:
+                ${"%.02f" % sum([expense["price"] for expense in date["moneys"] if expense["price"] < 0])} Ls
+            </td>
+            <td class="money">
+                ${"%.02f" % sum([expense["price"] for expense in date["moneys"] if expense["price"] > 0])} Ls
+            </td>
+        </tr>
+
+        <tr class="sum">
+            <td colspan="4" style="text-align: right" class="money">
+                Grand total:
+                ${"%+.02f" % sum([expense["price"] for expense in date["moneys"]])} Ls
+            </td>
+        </tr>
+    % endfor
+
+</table>
+
+
+<script type="text/javascript">
+    var balance_spotlight = null; // will be replaced by controller
+    if (balance_spotlight) {
+        balance_spotlight = $("a.balance[key=" + balance_spotlight + "]");
+        var line = balance_spotlight.parent().parent();
+        var bg = line.css("backgroundColor");
+        line.animate({backgroundColor: "yellow"}, "fast").animate({backgroundColor: bg}, 1500);
+    }
+</script>

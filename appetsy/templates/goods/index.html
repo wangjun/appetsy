@@ -1,0 +1,98 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <link type="text/css" rel="stylesheet" href="/public/main.css" />
+    <title>Active and sold</title>
+</head>
+<body>
+
+<%def name="sparklines(goods)">
+    <%
+        import itertools
+        
+        last_day = max([good.created for good in goods]).day
+        by_day = {}
+        max_day = 0
+        for day, day_goods in itertools.groupby(goods, lambda good: good.created.day):
+            by_day[day] = list(day_goods)
+            max_day = max(max_day, len(by_day[day]))
+    %>
+    <div style="position: relative; float: left; margin-left: 20px; background: #54D0C1; margin-top: 0.25em">
+        % for i in range(1, last_day + 1):
+            <div style="float: left; width: 1px; background: #fff; height: ${int(16 - 16 * len(by_day.get(i, [])) / float(max_day))}px">
+                &nbsp;
+            </div>
+        % endfor
+        <div style="position: absolute; left: -5px; top: -5px; font-size: 8px; font-weight: normal; color: #333;">
+            ${max_day}
+        </div>
+    </div>
+</%def>
+
+
+<div id="contents" class="single-col">
+    <h1>Sold by the color</h1>
+    <%
+        sold = [listing for listing in listings if listing.state == "sold_out"]
+    %>
+    
+    % for item in sold:
+        <a href="/goods/${item.key()}" style="margin-right: -4px;">
+            <img src="${defs.listing_image(item, 75)}" title="${item.title}" />
+        </a>
+    % endfor
+    
+    
+    
+    <h1>Active and sold items</h1>
+    <table id="active_goods">
+        <%
+            stripes = ["odd", "even"]
+            months = [u"Janvāris", u"Februāris", u"Marts", u"Aprīlis", u"Maijs",
+                      u"Jūnijs", u"Jūlijs", u"Augusts", u"Septembris",
+                      u"Oktobris", u"Novembris", u"Decembris"]
+            odd = 0
+        %>
+
+        % for date in dates:
+            <tr>
+                <td class="title" colspan = "5">
+                    <div style="float: left; color: silver">${months[date["month"]-1]}</div>
+                    <div style="float: left;">
+                        ${sparklines(date["goods"])}
+                    </div>
+                </td>
+            </tr>
+                
+            % for good in date["goods"]:
+                <% odd = 1 - odd %>
+                <tr class="${stripes[odd]}">
+                    <td class="date">${good.created.strftime("%b %d")}</td>
+                    <td>
+                        % if good.listing:
+                            <a href="${good.listing.url}" target="_blank">
+                                <img src="${good.listing.image_url.replace("50x50", "25x25")}" />
+                            </a>
+                        % endif
+                        <a href="/goods/${good.key()}/edit">
+                            ${good.name}
+                        </a>
+                    </td>
+                    % if good.sold:
+                        <td class="date">${good.sold.strftime("%b %d")}</td>
+                        <td class="money">${"%.2f" % good.price} Ls</td>
+                    % else:
+                        <td colspan="2"></td>
+                    % endif
+                </tr>
+            % endfor
+        % endfor
+    </table>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,37 @@
+
+<script type="text/javascript">
+    $('#expense_name').focus();
+    preview_date("#purchase_");
+</script>
+
+<form id="expenses_form"  action="/expenses/${item.key()}" method="post">
+    <input type="hidden" name="_method" value="put" />
+    <table>
+        <tr>
+            <td><label for="expense_name">Purchase:</label></td>
+            <td><input type="text" name="expense_name" id="expense_name" value="${item.name}" size="50"/></td>
+        </tr>
+        <tr>
+            <td><label for="purchase_date">When:</label></td>
+            <td>
+                <input type="hidden" name="purchase_date" id="purchase_date" value="${item.purchase_date.strftime("%b-%d-%Y")}">
+                <input type="text"
+                       id="purchase_date_edit"
+                       size="12"
+                       value="${item.purchase_date.strftime("%d-%b")}"
+                       onchange="preview_date('#purchase_')"
+                  />
+                <span id="purchase_date_preview" class="description">&nbsp;</span>
+        </tr>
+        <tr>
+            <td><label for="price">Price:</label></td>
+            <td><input type="text" name="price" id="price" size="4"  value="${item.price}" /> lati</td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align: right" />
+                <button id="cancel_expense" type="button" onclick="javascript:document.location='/'">Cancel</button>
+                <button id="save_expense" type="submit">Add!</button>
+            </td>
+        </tr>
+    </table>
+</form>

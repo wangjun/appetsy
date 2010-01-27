@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+<%namespace name="defs" file="/defs.html"/>
+
+${defs.head(listing.title)}
+
+<%def name="sparklines(exposures)">
+    <%
+        import itertools
+        import datetime as dt
+        
+        prev_view_count = 0
+        for exposure in exposures:
+            exposure.delta = exposure.view_count - prev_view_count
+            prev_view_count = exposure.view_count
+        
+        times = [exposure.exposure_time.date() for exposure in exposures]
+        start_date = min(times)
+        end_date = max(times)
+        max_a_day = 0
+        by_date = {}
+        
+        for date, date_exposures in itertools.groupby(exposures, lambda exposure: exposure.exposure_time.date()):
+            day_total = sum([exp.delta for exp in list(date_exposures)])
+            by_date[date] = day_total
+            max_a_day = max([max_a_day, day_total])
+    %>
+
+    <table>
+        <tr>
+            % for i in range(0, (end_date - start_date).days):
+                <td style="height: 75px; text-align: center; padding: 0; border-bottom: 1px solid gray; vertical-align: bottom; padding-top: 5px;">
+                    <%
+                        current_date = start_date + dt.timedelta(days = i)
+                    %>
+                    <div style="float: left; width: 20px; background: #54D0C1; height: ${int(by_date.get(current_date, 0) / float(max_a_day) * 100)}%">
+                        &nbsp;
+                    </div>
+                </td>
+            % endfor
+        </tr>
+        <tr>
+            % for i in range(0, (end_date - start_date).days):
+                <% current_date = start_date + dt.timedelta(days = i) %>
+                <td style="font-size: 0.7em; padding: 5px 0; margin: 0;">
+                    ${current_date.strftime("%b %d")}
+                </td>
+            % endfor
+        </tr>
+    </table>
+
+    <div style="position: absolute; left: -5px; top: -5px; font-size: 8px; font-weight: normal; color: #333;">
+        ${max_a_day}
+    </div>
+</%def>
+
+
+<h1>${listing.title}</h1>
+
+<table>
+    <tr>
+        <td rowspan="2">
+            <img src="${defs.listing_image(listing, 75)}" style="float: left"/>
+        </td>
+        <td>
+            ${listing.faves} fans, ${listing.views} times viewed
+        </td>
+    </tr>
+    <tr>
+        <td>
+            ${sparklines(exposures)}
+        </td>
+    </tr>
+</table>
+
+
+
+<table style="width: auto">
+    <%
+        stripes = ["odd", "even"]
+        odd = 0
+    %>
+    % for item_fan in fans:
+            <% odd = 1 - odd %>
+            <tr class="${stripes[odd]}">
+                <td>${defs.fanpic(item_fan.fan, 75)}</td>
+                <td>${item_fan.fan.user_name}</td>
+                <td>
+                    <a href="/fans/${item_fan.fan.key()}">
+                        Parādīt citus favorītus
+                    </a>
+                </td>
+            </tr>
+    % endfor
+</table>
+
+</body>
+</html>
