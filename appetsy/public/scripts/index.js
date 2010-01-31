@@ -126,13 +126,12 @@ function applyPopups() {
 
         var link = this;
         $("#edit_good_form").html("Loading...")
-        $("#edit_good_form").css("left", $(link).parent().position().left)
-        $("#edit_good_form").css("top", $(link).parent().position().top + $(link).height() + 4)
+        $("#edit_good_form").css("left", $(link).offset().left)
+        $("#edit_good_form").css("top", $(link).offset().top + $(link).height() + 4)
         $("#edit_good_form").show();
 
         jQuery.get("/goods/" + key + "/edit",
                    function(data, status) {
-                        var pos = $(link).position().left;
                         $("#edit_good_form").html(data);
 
                         $("#cancel_good").attr("onclick", "");

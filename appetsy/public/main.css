@@ -486,12 +486,13 @@ a.highlights {
 .good-tile {
     display: inline-block;
     border: 1px solid #eee;
+    border-collapse: collapse;
     background: #f9f9f9;
     margin: 3px;
     width: 250px;
+    min-height: 83px;
     font-size: 0.85em;
     position: relative;
-    overflow: hidden;
     -moz-border-radius: 2px;
 }
 
@@ -499,7 +500,7 @@ a.highlights {
     vertical-align: top;
 }
 
-.good-tile-icon {
+.good-tile img {
     vertical-align: top;
     display: inline-block;
     height: 75px;
