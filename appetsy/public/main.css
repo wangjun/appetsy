@@ -112,7 +112,7 @@ a.highlights {
 }
 
 #fave_totals {
-    text-align: center;    
+    text-align: center;
     font-weight: bold;
     font-size: 20px;
     padding-left: 4px;
@@ -172,7 +172,7 @@ a.highlights {
 
 
 #iconlist td.title {
-    text-align: center;    
+    text-align: center;
     padding: 12px;
     background: inherit;
 }
@@ -277,7 +277,7 @@ a.highlights {
     display: inline;
     position: relative;
     opacity: 0.9;
-    padding-right: 1px;    
+    padding-right: 1px;
 }
 
 .fangroup img {
@@ -429,21 +429,21 @@ a.highlights {
 }
 
 .tabs li {
-    display: inline;    
+    display: inline;
 }
 
 .tabs li a {
     display: inline-block;
     margin-top: 4px;
     margin-bottom: -3px;
-    
+
     padding: 4px 8px;
     margin-right: 2px;
     font-size: 1.2em;
-    
+
     -moz-border-radius-topright: 6px;
     -moz-border-radius-topleft: 6px;
-    
+
     text-decoration: none;
     color: inherit;
     border: 3px solid #eee;
@@ -483,16 +483,20 @@ a.highlights {
     background: yellow;
 }
 
-
 .good-tile {
     display: inline-block;
-    padding: 8px;
-    height: 75px;
-    pading-right: 12px;
     border: 1px solid #eee;
     background: #f9f9f9;
-    overflow: hidden;
     margin: 3px;
+    width: 250px;
+    font-size: 0.85em;
+    position: relative;
+    overflow: hidden;
+    -moz-border-radius: 2px;
+}
+
+.good-tile td {
+    vertical-align: top;
 }
 
 .good-tile-icon {
@@ -503,15 +507,10 @@ a.highlights {
     padding-right: 6px;
 }
 
-.good-tile-title {    
-    position: relative;
-    display: inline-block;
-    color: #666;
-    text-align: left;
-    width: 150px;
-    font-size: 0.85em;
-    height: 75px;
+.good-tile a {
+  color: #666;
 }
+
 
 .good-tile-date {
     position: absolute;
@@ -574,6 +573,3 @@ ul.popup_sections li.current {
 .icon img {
     display: block;
 }
-
-
-

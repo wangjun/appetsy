@@ -8,27 +8,25 @@
 % else:
 
     % for good in goods:
-        <div class="good-tile ${"ordered" if good.status == "ordered" else ""}">
-            <div class="good-tile-icon">
-                % if good.listing:
-                    <img src="${good.listing.image_url.replace("50x50", "75x75")}" />
-                % endif
-            </div>
+        <table class="good-tile ${"ordered" if good.status == "ordered" else ""}">
+            <tr>
+                <td>
+                    % if good.listing:
+                        <img src="${good.listing.image_url.replace("50x50", "75x75")}" />
+                    % endif
+                </td>
+                <td>
+                    <a href="/goods/${good.key()}/edit"
+                       class="index active_good_link ${"inactive" if good.listing and good.listing.state != "active" else ""}"
+                       key="${good.key()}">
+                        ${good.name}
+                    </a>
+                    <div>${"&lt;statuss: %s&gt;" % good.listing.state if good.listing and good.listing.state != "active" else ""}</div>
 
-            <div class="good-tile-title">
-                <a href="/goods/${good.key()}/edit"
-                   class="index active_good_link ${"inactive" if good.listing and good.listing.state != "active" else ""}"
-                   key="${good.key()}">
-                    ${good.name}
-                </a>
-
-                <div>${"&lt;statuss: %s&gt;" % good.listing.state if good.listing and good.listing.state != "active" else ""}</div>
-
-                <div class="good-tile-date">${good.created.strftime("%b %d")}</div>
-            </div>
-    
-        </div>
-
+                    <div class="good-tile-date">${good.created.strftime("%b %d")}</div>
+                </td>
+            </tr>
+        </table>
     % endfor
 % endif
 
