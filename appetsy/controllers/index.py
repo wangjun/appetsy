@@ -29,11 +29,32 @@ class IndexController(appetsy.Controller):
         data["user"] = self.user
 
         data["logout_url"] = users.create_logout_url("/")
+        data["current_shop"] = self.shop
+
+        # check if all the cache is gone, do the loading in the page
+        # to avoid timing out
+        if not memcache.get_multi(["fan_list",
+                                   "income_progress",
+                                   "active_goods_icon_list"],
+                                  namespace = str(self.shop.id)):
+            # all the memories are gone!"
+            data.update({"fans_today": "",
+                         "progress_box": "",
+                         "sold_featured": "",
+                         "recent_views_json": "",
+                         "active_goods": "",
+                         "active_expenses": "",
+                         "balance": "",
+                         "instant_refresh": True})
+            return appetsy.get_template("index.html").render(**data)
+
+        data["instant_refresh"] = False
 
         # preloading ajax
         data["fans_today"] = self.fans_today().decode("utf-8")
         data["progress_box"] = self.progress_box().decode("utf-8")
         data["sold_featured"] = self.sold_and_featured_today().decode("utf-8")
+        data["recent_views_json"] = self.recent_views()
 
         goods_controller = goods.GoodsController()
         goods_controller.initialize(self.request, self.response)
@@ -43,10 +64,6 @@ class IndexController(appetsy.Controller):
         expenses_controller.initialize(self.request, self.response)
         data["active_expenses"] = expenses_controller.active().decode("utf-8")
         data["balance"] = expenses_controller.balance().decode("utf-8")
-
-        data["current_shop"] = self.shop
-
-        data["recent_views_json"] = self.recent_views()
 
         return appetsy.get_template("index.html").render(**data)
 

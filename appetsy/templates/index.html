@@ -9,8 +9,8 @@ ${defs.head(u"Psssst!")}
 
     today = appetsy.today(current_shop)
     next_secret = appetsy.zero_timezone(dt.datetime(2009, 1, 28, 0, 0))
-    
-    
+
+
     while next_secret < today:
         next_secret += dt.timedelta(days = 191)
 
@@ -29,40 +29,40 @@ ${defs.head(u"Psssst!")}
 <span id="status">Refreshing page...</span>
 
 <div id="user_line">
-    
+
     <a href="/etsy/">Etsy</a>
-    
+
     % if user.email in ["em.suuna@gmail.com", "toms.baugis@gmail.com"]:
         <p>
             <span id="appetsy_dienas">
                 ${(next_secret - today).days}
                 <img src="/public/karogs.png" />
             </span>
-            
+
             <span class="popup">
                 Vēl palikušas: <b>${days_since_zero}</b> dienas.
                 Nākamie slepenie svētki: <b>${next_secret.strftime("%b %d")}</b>
             </span>
-            
+
             <script type="text/javascript">
                 $("#appetsy_dienas").hover(
-                    function(){                        
+                    function(){
                         $(this).next().fadeIn();
                     },
-                    
+
                     function(){
-                        var div = $(this).next();                        
+                        var div = $(this).next();
                         setTimeout(function(){div.fadeOut()}, 1000);
                     }
                 );
             </script>
         </p>
-    % endif                                 
+    % endif
 
     <p style="float: right">
         Hey ${user.greeting}! <a href="${logout_url}"> Log out</a>
     </p>
-    
+
     % if len(user.shops) > 1:
         <p style="float: right">
             <select onchange="javascript:changeShop(this.value)">
@@ -95,7 +95,7 @@ ${defs.head(u"Psssst!")}
             <li><a id="overview_tab" page="overview_page" class="active">Overview</a></li>
             <li><a id="balance_tab" page="balance_page">Balance</a></li>
         </ul>
-    
+
 
 
         <div class="pages">
@@ -105,15 +105,15 @@ ${defs.head(u"Psssst!")}
                 </div>
 
                 <div id="active_goods">${active_goods}</div>
-            
-            
+
+
                 <h1>
                     <div style="float: right; text-align: right">
                         <button id="add_expense_button">+</button>
                     </div>
                     Recent purchases
                 </h1>
-            
+
                 <div id="active_expenses">${active_expenses}</div>
             </div>
             <div class="page" id="balance_page" style="display:none">
@@ -130,12 +130,18 @@ ${defs.head(u"Psssst!")}
     <div id="add_expense" class="popup">
         <%include file="expenses/new.html"/>
     </div>
-    
+
     <div id="edit_good_form" class="popup"></div>
     <div id="edit_expense_form" class="popup"></div>
     <div id="edit_plans_form" class="popup" style="padding: 2px;"></div>
 
 </div>
+
+% if instant_refresh:
+    <script type="text/javascript">
+        refreshContent();
+    </script>
+% endif
 
 </body>
 </html>
