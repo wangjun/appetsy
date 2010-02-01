@@ -41,9 +41,9 @@ class IndexController(appetsy.Controller):
             data.update({"fans_today": "",
                          "progress_box": "",
                          "sold_featured": "",
-                         "recent_views_json": "",
-                         "active_goods": "",
-                         "active_expenses": "",
+                         "recent_views_json": {},
+                         "active_goods": [],
+                         "active_expenses": [],
                          "balance": "",
                          "instant_refresh": True})
             return appetsy.get_template("index.html").render(**data)

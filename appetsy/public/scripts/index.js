@@ -451,6 +451,9 @@ var viewStats = {
 
 
     plot: function(stats){
+        if (!stats.views)
+            return
+
         if (!this.r) {
             this.r = Raphael(this.div(), this.width, this.height);
         }
