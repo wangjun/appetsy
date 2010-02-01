@@ -42,8 +42,8 @@ class IndexController(appetsy.Controller):
                          "progress_box": "",
                          "sold_featured": "",
                          "recent_views_json": {},
-                         "active_goods": [],
-                         "active_expenses": [],
+                         "active_goods": "",
+                         "active_expenses": "",
                          "balance": "",
                          "instant_refresh": True})
             return appetsy.get_template("index.html").render(**data)
