@@ -8,7 +8,7 @@
 % else:
 
     % for good in goods:
-        <table class="good-tile ${"ordered" if good.status == "ordered" else ""}">
+        <table class="good-tile ${"ordered" if good.status == "ordered" else ""}" key="${good.key()}">
             <tr>
                 <td>
                     % if good.listing:
@@ -35,8 +35,7 @@
 <script type="text/javascript">
     var goods_spotlight = null; // will be replaced by controller
     if (goods_spotlight) {
-        goods_spotlight = $("a.index[key=" + goods_spotlight + "]");
-        var line = goods_spotlight.parent().parent();
+        var line = $(".good-tile[key=" + goods_spotlight + "]");
         var bg = line.css("backgroundColor");
         line.animate({backgroundColor: "yellow"}, "fast").animate({backgroundColor: bg}, 1500);
     }
