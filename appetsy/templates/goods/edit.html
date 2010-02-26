@@ -14,7 +14,7 @@
                 <input type="hidden" name="creation_date" id="edit_creation_date" value="${item.created.strftime("%b-%d-%Y")}">
                 <input type="text"
                        id="edit_creation_date_edit"
-                       value="${item.created.strftime("%d-%b")}"
+                       value="${item.created.strftime("%d-%b-%Y")}"
                        size="12"
                        onchange="goods_preview_date('#edit_creation_')" />
                 <span id="edit_creation_date_preview" class="description">&nbsp;</span>
@@ -54,7 +54,7 @@
                         % endfor
                         </optgroup>
                     % endfor
-                    
+
                 </select>
             </td>
         </tr>
@@ -77,7 +77,7 @@
                 <input type="text"
                        id="edit_sale_date_edit"
                        size="12"
-                       value="${item.sold.strftime("%d-%b") if item.sold else ""}"
+                       value="${item.sold.strftime("%d-%b-%Y") if item.sold else ""}"
                        onchange="goods_preview_date('#edit_sale_')" />
                 <span id="edit_sale_date_preview" class="description">&nbsp;</span>
             </td>
@@ -106,7 +106,7 @@
             $(prefix+"date").val("");
         }
     }
-    
+
 
     goods_preview_date("#edit_creation_");
     goods_preview_date("#edit_sale_");
