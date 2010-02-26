@@ -33,6 +33,7 @@ p {
 table {
     margin-bottom: 12px;
     -moz-border-radius: 6px;
+    -webkit-border-radius: 6px;
     padding: 6px;
     border-collapse: collapse;
 }
@@ -100,6 +101,7 @@ a.highlights {
     background: silver;
     display: inline-block;
     -moz-border-radius: 7px;
+    -webkit-border-radius: 7px;
     text-decoration: none;
 }
 
@@ -147,6 +149,7 @@ a.highlights {
     background: #f4f4f4;
     padding: 8px 6px;
     -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
     z-index: 500;
 }
 
@@ -342,6 +345,7 @@ a.highlights {
  background: white;
  border: 1px solid silver;
  -moz-border-radius: 4px;
+ -webkit-border-radius: 4px;
 }
 
 #status {
@@ -351,7 +355,9 @@ a.highlights {
     z-index: 2000;
 
     -moz-border-radius-bottomleft: 4px;
+    -webkit-border-bottom-left-radius: 4px;
     -moz-border-radius-bottomright: 4px;
+    -webkit-border-top-right-radius: 4px;
     background: #F3E88D;
     padding: 2px 6px 4px 6px;
     font-weight: bold;
@@ -370,6 +376,7 @@ a.highlights {
     background: #f0f0f0;
     border: 4px solid #ccc;
     -moz-border-radius: 10px;
+    -webkit-border-radius: 10px;
 }
 
 .fan_popup p {
@@ -418,6 +425,7 @@ a.highlights {
     color: black;
     background: #fff;
     -moz-border-radius-topright: 4px;
+    -webkit-border-top-right-radius: 4px;
     padding: 1px 3px;
 }
 
@@ -442,7 +450,10 @@ a.highlights {
     font-size: 1.2em;
 
     -moz-border-radius-topright: 6px;
+    -webkit-border-top-right-radius: 6px;
+
     -moz-border-radius-topleft: 6px;
+    -webkit-border-top-left-radius: 6px;
 
     text-decoration: none;
     color: inherit;
@@ -459,6 +470,7 @@ a.highlights {
 .pages {
     border: 3px solid #eee;
     -moz-border-radius-topright: 6px;
+    -webkit-border-top-right-radius: 6px;
     padding: 12px;
 }
 
@@ -494,6 +506,7 @@ a.highlights {
     font-size: 0.85em;
     position: relative;
     -moz-border-radius: 2px;
+    -webkit-border-radius: 2px;
 }
 
 .good-tile td {
@@ -536,7 +549,9 @@ ul.popup_sections li {
     border: 1px  solid #f0f0f0;
     border-right: none;
     -moz-border-radius-topleft: 6px;
+    -webkit-border-top-left-radius: 6px;
     -moz-border-radius-bottomleft: 6px;
+    -webkit-border-bottom-left-radius: 6px;
 }
 ul.popup_sections li a {
     text-decoration: none;

@@ -31,6 +31,7 @@ form.inline button {
     padding: 2px 3px;
     border: 1px solid silver;
     -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
     font-size: 0.8em;
     display: none;
 }
