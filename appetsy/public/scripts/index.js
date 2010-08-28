@@ -12,7 +12,7 @@ $(document).ready(function() {
         $('#add_expense').show();
         document.forms["add_expense_form"].reset()
 
-        $("#expense_date_edit").val(new Date().toLocaleFormat("%d-%b"));
+        $("#expense_date_edit").val(new Date().toString("d-MMM"));
         preview_date("#expense_")
 
         $('#expense_name').focus();
@@ -25,7 +25,7 @@ $(document).ready(function() {
         $('#add_good').show();
         document.forms["add_good_form"].reset()
 
-        $("#creation_date_edit").val(new Date().toLocaleFormat("%d-%b"));
+        $("#creation_date_edit").val(new Date().toString("d-MMM"));
         preview_date("#creation_")
         $('#good_name').focus();
 
@@ -413,7 +413,7 @@ function edit_show_sold_details() {
     if ($("#edit_good_status").val() == "sold") {
         $("#edit_sale_date_row").show();
         $("#edit_sale_price_row").show();
-        $("#edit_sale_date_edit").value = new Date().toLocaleFormat("%d-%b");
+        $("#edit_sale_date_edit").value = new Date().toString("d-MMM");
         $("#edit_sale_date_edit").focus();
         $("#edit_sale_date_edit").select();
     } else {
@@ -429,7 +429,7 @@ function show_sold_details() {
     if ($("#good_status").val() == "sold") {
         $("#sale_date_row").show();
         $("#sale_price_row").show();
-        $("#sale_date_edit").value = new Date().toLocaleFormat("%d-%b");
+        $("#sale_date_edit").value = new Date().toString("d-MMM");
         $("#sale_date_edit").focus();
         $("#sale_date_edit").select();
     } else {
