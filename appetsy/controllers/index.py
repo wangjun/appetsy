@@ -131,7 +131,7 @@ class IndexController(appetsy.Controller):
                  'events': [event.event for event in stat_events[view_time]] if view_time in stat_events else [],
                  'faves': stat_faves[view_time] if view_time in stat_faves else 0,
                  'views': views[view_time].count if view_time in views else 0,
-                 'rel_views': views[view_time].count / float(max_views) if view_time in views else 0,
+                 'rel_views': views[view_time].count / float(max_views) if float(max_views) and view_time in views else 0,
                 }
             )
 
