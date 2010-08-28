@@ -30,7 +30,7 @@ class Etsy2(object):
         basedict = {"api_key":self.__api_key}
         basedict.update(params)
         fullurl = self.base_url + path + '?' + urlencode(basedict)
-        logging.info(fullurl)
+        logging.debug(fullurl)
 
         f = urlopen(fullurl)
         ret = json.load(f)
@@ -46,9 +46,11 @@ class Etsy2(object):
         return r['results'][0]
 
 
-    def getResource(self, resource, id, includes = []):
+    def getResource(self, resource, id, includes = [], limit=100,  offset=0):
         path = '/%s/%s' % (resource, id)
-        params = {'includes': ",".join(includes)}
+        params = {'includes': ",".join(includes),
+                  'limit': limit,
+                  'offset': offset}
         response = self._make_call(path, params)
 
         res = []
