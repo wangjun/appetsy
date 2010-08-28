@@ -111,7 +111,7 @@ class FanSync(Job):
 
         if fan_id == "_private":
             db_fan.image_url = "/public/dejo_slepens_75x75.png"
-            db_fan.small_image_url = "/public/dejo_slepens_25x25.png",
+            db_fan.small_image_url = "/public/dejo_slepens_25x25.png"
             db_fan.status = "private"
         else:
             etsy_fan = self.etsy.getUser(fan_id, ["Profile", "Shops"])
