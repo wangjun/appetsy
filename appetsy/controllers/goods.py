@@ -44,11 +44,10 @@ class GoodsController(appetsy.Controller):
                                    .order("shop").order("-status").order("-created").fetch(500)
 
             etsy_count = len([good for good in goods if good.listing])
-            unlisted_count = len(goods) - etsy_count
+
+            unlisted_count = len([good for good in goods if good.status != "ordered"]) - etsy_count
 
             active_list = appetsy.get_template("goods/active_icons.html").render(goods = goods,
-                                                                              etsy_count = etsy_count,
-                                                                              unlisted_count = unlisted_count)
             memcache.set("active_goods_icon_list", active_list, namespace = str(self.shop.id))
 
         spotlight = self.request.get("spotlight")
