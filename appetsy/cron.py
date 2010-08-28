@@ -150,8 +150,18 @@ class FrontpageItemsSync(Job):
         if not self.ping():
             return
 
-        frontpage = self.etsy.getFrontFeaturedListings()
-        frontpage_ids = ["listing:%d" % listing.listing_id for listing in frontpage]
+
+        current_pick = self.etsy.getResource("homepages", "pickers", limit=1)[0].featured_listing_picker_id
+
+        if memcache.get("current_pick") == current_pick:
+            self.write("Same treasury - will come back later")
+            return
+
+        memcache.set("current_pick", current_pick)
+        items = self.etsy.getResource("homepages/pickers/%d" % current_pick, "featured")
+
+
+        frontpage_ids = ["listing:%d" % item.listing_id for item in items]
 
         listings = [listing for listing in storage.EtsyListings.get_by_key_name(frontpage_ids) if listing]
         listing_ids = [listing.id for listing in listings]
@@ -362,7 +372,6 @@ class ItemFansSync(Job):
         item_fans = []
         for timestamp in (etsy_timestamps - db_timestamps):
             favorer = etsy_favorers_by_timestamp[timestamp]
-            logging.error(favorer)
             fan = self.get_fan(favorer)
 
             item_fans.append(storage.ItemFans(fan = fan,
@@ -526,8 +535,7 @@ class ItemFavorersSync(Job):
             listing = storage.EtsyListings.get_by_key_name(id)
             self.log("%d '%s' not found in active etsy listings" % (listing.id, listing.title))
             try:
-                details = self.etsy.getListingDetails(listing.id,
-                                                      detail_level = "medium")
+                details = self.etsy.getListing(listing.id)
             except ValueError: #this happens when item is under edit, that is - has no status
                 listing.state = "unknown"
                 listing.put()
@@ -641,18 +649,6 @@ class ItemFavorersSync(Job):
         """update database listing d with data of etsy listing e"""
         changes = False
 
-        if d.title != e.title:
-            self.log("'%s' title --> '%s'" % (d.title, e.title))
-            d.title = e.title
-            changes = True
-
-        if d.views != int(e.views):
-            views = int(e.views) - (d.views or 0)
-            self.log("'%s' views +%d" % (d.title, views))
-            d.views = int(e.views)
-            self.__add_exposure(d, views)
-            changes = True
-
         if d.state != e.state:
             self.log("'%s' state '%s' --> '%s'" % (d.title, d.state, e.state))
             d.state = e.state
@@ -660,23 +656,36 @@ class ItemFavorersSync(Job):
                 storage.Events(listing = d, shop = d.shop, event = d.state).put()
             changes = True
 
-        if  appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
-            if not d.ending:
-                storage.Events(listing = d,
-                       shop = d.shop,
-                       event = "posted",
-                       created = appetsy.etsy_epoch(e.creation_tsz)).put()
-            else:
-                self.log("'%s' renewed" % d.title)
-                storage.Events(listing = d, shop = d.shop, event = "renewed").put()
+        if e.state != "expired":
+            if d.title != e.title:
+                self.log("'%s' title --> '%s'" % (d.title, e.title))
+                d.title = e.title
+                changes = True
 
-            d.ending = appetsy.etsy_epoch(e.ending_tsz)
-            changes = True
+            if d.views != int(e.views):
+                views = int(e.views) - (d.views or 0)
+                self.log("'%s' views +%d" % (d.title, views))
+                d.views = int(e.views)
+                self.__add_exposure(d, views)
+                changes = True
 
-        if d.price != float(e.price):
-            self.log("'%s' price %.2f --> %.2f" % (e.title, (d.price or 0.0), float(e.price)))
-            d.price = float(e.price)
-            changes = True
+            if  appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
+                if not d.ending:
+                    storage.Events(listing = d,
+                           shop = d.shop,
+                           event = "posted",
+                           created = appetsy.etsy_epoch(e.creation_tsz)).put()
+                else:
+                    self.log("'%s' renewed" % d.title)
+                    storage.Events(listing = d, shop = d.shop, event = "renewed").put()
+
+                d.ending = appetsy.etsy_epoch(e.ending_tsz)
+                changes = True
+
+            if d.price != float(e.price):
+                self.log("'%s' price %.2f --> %.2f" % (e.title, (d.price or 0.0), float(e.price)))
+                d.price = float(e.price)
+                changes = True
 
         if changes:
             memcache.set("listing:%d" % d.id, d) #store our memcache copy for next cron
