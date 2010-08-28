@@ -12,7 +12,7 @@
             <tr>
                 <td>
                     % if good.listing:
-                        <img src="${good.listing.image_url.replace("50x50", "75x75")}" />
+                        <img src="${(good.listing.image_url or "").replace("50x50", "75x75")}" />
                     % endif
                 </td>
                 <td>
