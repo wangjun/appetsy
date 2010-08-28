@@ -67,7 +67,7 @@ ${defs.head(u"Psssst!")}
         <p style="float: right">
             <select onchange="javascript:changeShop(this.value)">
                 % for shop in user.shops:
-                    <option value="${shop.id}" ${'selected="selected"' if shop.id == current_shop.id else ""}>${shop.title}</option>
+                    <option value="${shop.id}" ${'selected="selected"' if shop.id == current_shop.id else ""}>${shop.shop_name}</option>
                 % endfor
             </select>
         </p>
