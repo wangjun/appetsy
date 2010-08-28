@@ -294,19 +294,19 @@ class ShopFavorersSync(Job):
             self.log("*** Request timed out!")
         except Timeout:
             self.log("*** Database timed out!")
-        finally:
+        else:
             if fans_added == 0:
                 self.log("Nothing new in %d-%d range" % (offset, offset+100))
             elif fans_added > 0:
                 appetsy.invalidate_memcache("fans", namespace=str(shop.id))
-
             if len(fans) == 100: #fetched all means there are more
-                self.write('<a href="/cron/shop?shop=%d&page=%d">There are more</a>' % (shop.id, page+1))
-
+                self.log("There are more - going for next batch")
+                taskqueue.add(url='/cron/shop?shop=%d&page=%d' % (shop.id, page+1), method = 'get')
+        finally:
             self.write("</pre></body></html>")
 
 
-class ItemFansSync(Job):
+class ItemInfoSync(Job):
     def post(self):
         self.get()
 
@@ -520,7 +520,7 @@ class ItemFavorersSync(Job):
                 if our_listing.id not in pending:
                     pending.append(our_listing.id)
                     memcache.set("items_pending_refresh", pending)
-                    taskqueue.add(url='/cron/itemfans?listing=%d' % our_listing.id, method = 'get')
+                    taskqueue.add(url='/cron/iteminfo?listing=%d' % our_listing.id, method = 'get')
 
 
         # now look for gone listings
@@ -701,10 +701,9 @@ class ItemFavorersSync(Job):
 application = webapp.WSGIApplication([('/cron/shop', ShopFavorersSync),
                                       ('/cron/items', ItemFavorersSync),
                                       ('/cron/frontpage', FrontpageItemsSync),
-                                      ('/cron/itemfans', ItemFansSync),
+                                      ('/cron/iteminfo', ItemInfoSync),
                                       ('/cron/fan', FanSync)
-                                      ],
-                                     debug=True)
+                                      ])
 def main():
   run_wsgi_app(application)
 
