@@ -17,13 +17,13 @@
 
 <div  style="display: inline-block; width: 60%;">
     <h1>Params</h1>
-    
+
     <script type="text/javascript">
         $(document).ready(function() {
             $(".param input").keypress(function() {
                 $(".param button").removeAttr("disabled", "disabled");
             });
-    
+
             $(".param button").click( function() {
                 $.get("/admin/set_key?key=" + $(".param input").val(), function(){
                     $(".param button").attr("disabled", "disabled");
@@ -32,7 +32,7 @@
             });
         });
     </script>
-    
+
     <table>
         % for param in params:
             <tr class="param">
@@ -51,7 +51,7 @@
         % for shop in shops:
             <tr>
                 <td><img src="${(shop.image_url or "").replace("75x75", "25x25")}"/></td>
-                <td>${shop.title}</td>
+                <td>${shop.shop_name}</td>
                 <td>${shop.id}</td>
                 <td>
                     <a href="/cron/shop?shop=${shop.id}">sync shop fans</a><br />
@@ -71,13 +71,13 @@
 
 <div style="display: inline-block; width: 60%;">
     <h1>Users</h1>
-    
+
     <script type="text/javascript">
         $(document).ready(function() {
             $(".user input").keypress(function() {
                 $(".user button").removeAttr("disabled", "disabled");
             });
-    
+
             $(".user button").click( function() {
                 $.get("/admin/new_user?email=" + $(".user .email").html() + "&greeting=" + $(".user input").val(),
                       function(){
@@ -87,21 +87,21 @@
             });
         });
     </script>
-    
+
     <table>
         <tr>
             <th>E-mail</th>
             <th>Shops</th>
             <th>Greeting</th>
         </tr>
-    
+
         % for user in users:
             <tr class="user">
                 <td><div class="email">${user.email}</div></td>
                 <td>
                     % for shop in user.shops:
                         <div>
-                            ${shop.title}
+                            ${shop.shop_name}
                         </div>
                     % endfor
                 </td>
@@ -110,13 +110,13 @@
             </tr>
         % endfor
     </table>
-    
+
     <h1>New User</h1>
     <script type="text/javascript">
         $(document).ready(function() {
             $("#new_user button").click( function() {
                 $.get("/admin/new_user?email=" + $("#new_user input[name=email]").val()
-                                + "&shop_id=" + $("#new_user input[name=shop_id]").val()
+                                + "&shop_name=" + $("#new_user input[name=shop_name]").val()
                                 + "&greeting=" + $("#new_user input[name=greeting]").val(),
                       function(){
                             window.location.reload();
@@ -133,7 +133,7 @@
         </tr>
         <tr>
             <td>etsy shop id</td>
-            <td><input name="shop_id"></td>
+            <td><input name="shop_name"></td>
         </tr>
         <tr>
             <td>greeting</td>
@@ -157,7 +157,7 @@
             </tr>
         % endfor
     </table>
-    
+
     <h1>Memcache stats</h1>
     <table>
         % for stat in memcache_stats:
