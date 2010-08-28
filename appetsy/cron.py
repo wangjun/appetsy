@@ -12,7 +12,7 @@ from google.appengine.api import memcache
 
 from google.appengine.api.labs import taskqueue
 
-from lib.etsy import Etsy
+from lib.etsy import Etsy2
 import datetime as dt
 
 import logging
@@ -32,7 +32,7 @@ class Job(webapp.RequestHandler):
             self.write("No etsy key! Please use admin/set_key to set it!")
             self.etsy = None
         else:
-            self.etsy = Etsy(etsy_key)
+            self.etsy = Etsy2(etsy_key)
 
         self.shops = memcache.get("cron_shops")
         if not self.shops:
@@ -60,28 +60,20 @@ class Job(webapp.RequestHandler):
 
     def get_fan(self, etsy_fan):
         # retrieves or creates fan by it's username
-
-        if etsy_fan.status == "private":
-            fan = storage.Fans.get_or_insert("_private",
-                                     user_name = None,
-                                     url = None,
-                                     image_url = "/public/dejo_slepens_75x75.png",
-                                     small_image_url = "/public/dejo_slepens_25x25.png",
-                                     status = etsy_fan.status,
-                                     joined_on = None)
+        if hasattr(etsy_fan, 'user_id'):
+            fan_id = str(etsy_fan.user_id)
         else:
-            if etsy_fan.image_url_75x75.endswith("grey.gif"):
-                # replace with our dancing bears
-                etsy_fan.image_url_75x75 = "/public/dejo_75x75.png"
-                etsy_fan.image_url_25x25 = "/public/dejo_25x25.png"
+            fan_id = "_private"
 
-            fan = storage.Fans.get_or_insert(etsy_fan.user_name,
-                                     user_name = etsy_fan.user_name,
-                                     url = etsy_fan.url,
-                                     image_url = etsy_fan.image_url_75x75,
-                                     small_image_url = etsy_fan.image_url_25x25,
-                                     status = etsy_fan.status,
-                                     joined_on = appetsy.etsy_epoch(etsy_fan.join_epoch))
+        fan = storage.Fans.get_or_insert(fan_id)
+        if not fan.user_name:
+            # request fan info
+            pending = memcache.get("fans_pending_refresh") or []
+            if fan_id not in pending:
+                pending.append(fan_id)
+                memcache.set("fans_pending_refresh", pending)
+                taskqueue.add(url='/cron/fan?id=%s' % fan_id, method = 'get')
+
         return fan
 
     def log(self, message):
@@ -103,6 +95,45 @@ class Job(webapp.RequestHandler):
             memcache.set(listing_key, listing)
 
         return listing
+
+
+class FanSync(Job):
+    def post(self):
+        self.get()
+
+    def get(self):
+        if not self.etsy:
+            return
+
+        fan_id = self.request.get("id")
+
+        db_fan = storage.Fans.get_by_key_name(fan_id)
+
+        if fan_id == "_private":
+            db_fan.image_url = "/public/dejo_slepens_75x75.png"
+            db_fan.small_image_url = "/public/dejo_slepens_25x25.png",
+            db_fan.status = "private"
+        else:
+            etsy_fan = self.etsy.getUser(fan_id, ["Profile", "Shops"])
+
+            db_fan.user_name = etsy_fan.login_name
+            db_fan.image_url = etsy_fan.Profile.image_url_75x75 or "/public/dejo_75x75.png"
+            db_fan.small_image_url = db_fan.image_url
+            db_fan.status = "normal"
+            if etsy_fan.Shops:
+                db_fan.url = "http://www.etsy.com/shop/%s" % etsy_fan.Shops[0].shop_name
+                db_fan.status = "seller"
+            db_fan.joined_on = appetsy.etsy_epoch(etsy_fan.creation_tsz)
+
+        logging.info("Added brand new fan: %s" % (db_fan.user_name or "secret"))
+
+        db.put(db_fan)
+
+        # remove from the pending list as we are done now
+        pending = memcache.get("fans_pending_refresh") or []
+        if fan_id in pending:
+            pending.remove(fan_id)
+            memcache.set("fans_pending_refresh", pending)
 
 
 class FrontpageItemsSync(Job):
@@ -132,7 +163,7 @@ class FrontpageItemsSync(Job):
             if item.listing.id not in listing_ids:
                 item.showing_now = False
                 item.put()
-                self.log("%s: '%s' gone from frontpage" % (item.listing.shop.title, item.listing.title))
+                self.log("%s: '%s' gone from frontpage" % (item.listing.shop.shop_name, item.listing.title))
                 memcache.delete("%d:on_frontpage" % item.listing.shop.id) # stop refreshing every minute
 
             else:
@@ -140,7 +171,7 @@ class FrontpageItemsSync(Job):
 
         # what's left is the news
         for listing in listings:
-            self.log("%s: '%s' got featured!" % (listing.shop.title, listing.title))
+            self.log("%s: '%s' got featured!" % (listing.shop.shop_name, listing.title))
             frontpaged = storage.Frontpaged(listing = listing,
                                     shop = listing.shop,
                                     exposure_time = dt.datetime.now().replace(second=0,
@@ -186,7 +217,7 @@ class ShopFavorersSync(Job):
 
 
         self.write("<html><body><pre>")
-        self.log("%s: Getting shop fans (hundred at a time)\n" % shop.title)
+        self.log("%s: Getting shop fans (hundred at a time)\n" % shop.shop_name)
 
 
         all_seen = False
@@ -198,7 +229,9 @@ class ShopFavorersSync(Job):
 
 
         try:
-            fans = self.etsy.getFavorersOfShop(shop.id, limit = 100, offset = offset)
+            shop_info = self.etsy.getUser(shop.shop_name, ["FavoredBy:100:%d" % offset])
+            fans = shop_info.FavoredBy
+
             if not fans:
                 self.log("No fans!")
                 return
@@ -207,7 +240,7 @@ class ShopFavorersSync(Job):
             # if we have seen him, we go home
             if page == 0:
                 seen_last = db.Query(storage.ShopFans).filter("shop =", shop) \
-                                              .filter("favored_on =", appetsy.etsy_epoch(fans[0].favorite_creation_epoch)) \
+                                              .filter("favored_on =", appetsy.etsy_epoch(fans[0].creation_tsz)) \
                                               .get()
                 if seen_last:
                     self.log("Seen last!")
@@ -216,7 +249,7 @@ class ShopFavorersSync(Job):
 
 
             all_fans = storage.ShopFans.all().filter("shop =", shop) \
-                                     .filter("favored_on >=", appetsy.etsy_epoch(fans[-1].favorite_creation_epoch)).fetch(1000)
+                                     .filter("favored_on >=", appetsy.etsy_epoch(fans[-1].creation_tsz)).fetch(1000)
 
             favored_datetimes = [fan.favored_on.replace(tzinfo=appetsy.UtcTzinfo()) for fan in all_fans]
 
@@ -225,9 +258,11 @@ class ShopFavorersSync(Job):
             new_fans = []
             for fan in fans:
                 fan_number +=1
-                fan.date = appetsy.etsy_epoch(fan.favorite_creation_epoch)
+                fan.date = appetsy.etsy_epoch(fan.creation_tsz)
 
-                user_name = "Slepenais" if fan.status == "private" else fan.user_name
+                user_name = "secret"
+                if hasattr(fan, 'user_id'):
+                    user_name = fan.user_id
 
                 if fan.date in favored_datetimes:
                     self.write("%d. Have seen this one %s (%s)" % (fan_number,
@@ -280,24 +315,27 @@ class ItemFansSync(Job):
             self.log("Can't find listing with id %s" % listing_id)
 
 
-        self.log("%s: Getting favorers for %s (%d known faves)..." % (listing.shop.title,
-                                                                      listing.title,
-                                                                      listing.faves or 0))
+        self.log("%s: Getting details for %s (%d known faves)..." % (listing.shop.shop_name,
+                                                                     listing.title,
+                                                                     listing.faves or 0))
 
         # get all etsy fans
         etsy_favorers_by_timestamp = {}
-        def get_all_favorers(e, offset):
+        def get_listing_info(offset = 0):
             if offset > 0:
                 self.log("%d - %d..." % (offset, offset + 100))
-            res = self.etsy.getFavorersOfListing(listing.id, limit="100", offset=offset)
 
-            if len(res) == 100:
-                res.extend(get_all_favorers(e, offset + 100))
-            return res
-        favorers = get_all_favorers(self.etsy, 0)
+            listing_info = self.etsy.getListing(listing.id, ["Images", "FavoredBy:100:%d" % offset])
 
-        for item in favorers:
-            etsy_favorers_by_timestamp[appetsy.etsy_epoch(item.favorite_creation_epoch)] = item
+            if len(listing_info.FavoredBy) > 0 and len(listing_info.FavoredBy) % 100 == 0:
+                listing_info.FavoredBy.extend(get_listing_info(offset + 100).FavoredBy)
+
+            return listing_info
+
+        listing_info = get_listing_info()
+
+        for item in listing_info.FavoredBy:
+            etsy_favorers_by_timestamp[appetsy.etsy_epoch(item.creation_tsz)] = item
         etsy_timestamps = set(etsy_favorers_by_timestamp.keys())
 
 
@@ -324,16 +362,14 @@ class ItemFansSync(Job):
         item_fans = []
         for timestamp in (etsy_timestamps - db_timestamps):
             favorer = etsy_favorers_by_timestamp[timestamp]
+            logging.error(favorer)
             fan = self.get_fan(favorer)
 
             item_fans.append(storage.ItemFans(fan = fan,
                                       listing = listing,
                                       shop = listing.shop,
-                                      favored_on = appetsy.etsy_epoch(favorer.favorite_creation_epoch)))
-            if fan.user_name:
-                self.log("  New fan: '%s'" % fan.user_name)
-            else:
-                self.log("  New secret fan")
+                                      favored_on = appetsy.etsy_epoch(favorer.creation_tsz)))
+            self.log("  New fan: '%s'" % (fan.user_name or fan.key()))
         db.put(item_fans)
 
         #gone fans
@@ -347,6 +383,7 @@ class ItemFansSync(Job):
 
         #update fan count for item
         listing.faves = len(etsy_timestamps)
+        listing.image_url = listing_info.Images[0].url_75x75
         listing.put()
 
         pending = memcache.get("items_pending_refresh") or []
@@ -372,12 +409,13 @@ class ItemFavorersSync(Job):
     def __get_etsy_listings(self, shop, offset = 0):
         """function that will go recursive until all shop listings have
         been fetched from etsy"""
-        self.log("%s: Getting listings (%d-%d...)"  % (shop.title, offset, offset  + 100))
-        listings = self.etsy.getListings(shop.id, limit = 100, offset = offset, detail_level="medium")
-        if len(listings) == 100:
-            listings.extend(self.__get_etsy_listings(shop, offset + 100))
+        self.log("%s: Getting listings"  % shop.shop_name)
+        shop = self.etsy.getShop(shop.shop_name, ["Listings:active:100:%d" % offset])
 
-        return listings
+        if len(shop.Listings) + offset < shop.listing_active_count:
+            shop.Listings.extend(self.__get_etsy_listings(shop, offset + 100))
+
+        return shop.Listings
 
     def get(self):
         if not self.etsy:
@@ -407,15 +445,22 @@ class ItemFavorersSync(Job):
 
 
         # if nothing's happening check if maybe listings have changed
+        etsy_listings = None
         if dt.datetime.now().minute % 3 == 0 and dt.datetime.now().minute % 7 != 0 \
                                              and not forced_request:
 
-            shop_info = self.etsy.getShopDetails(shop.id)
+            shop_info = self.etsy.getShop(shop.shop_name, ["Listings:active:100"])
+            etsy_listings = shop_info.Listings
+
+
             #sometimes counts do not match because shop info in etsy gets cached
-            if shop_info.listing_count != shop.listing_count:
-                self.log("Listing count has changed from %d to %d - will force update" %
-                                  (shop.listing_count or 0, shop_info.listing_count))
+            if shop_info.listing_active_count != shop.listing_count:
                 forced_request = True
+                self.log("Listing count has changed from %d to %d - will force update" %
+                                  (shop.listing_count or 0, shop_info.listing_active_count))
+
+                if len(etsy_listings) < shop_info.listing_active_count:
+                    etsy_listings.extend(self.__get_etsy_listings(shop_info, 100))
 
 
         # cron every X minutes unless forced
@@ -424,7 +469,7 @@ class ItemFavorersSync(Job):
             return
 
         #this costs about 800 cpu_ms for 200-300 listings
-        etsy_listings = self.__get_etsy_listings(shop)
+        etsy_listings = etsy_listings or self.__get_etsy_listings(shop)
 
         goods_without_listings = None
         for etsy_listing in etsy_listings:
@@ -615,22 +660,17 @@ class ItemFavorersSync(Job):
                 storage.Events(listing = d, shop = d.shop, event = d.state).put()
             changes = True
 
-        if d.image_url != e.image_url_50x50:
-            self.log("'%s' image '%s' --> '%s'" % (d.title, d.image_url, e.image_url_50x50))
-            d.image_url = e.image_url_50x50
-            changes = True
-
-        if  appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_epoch):
+        if  appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
             if not d.ending:
                 storage.Events(listing = d,
                        shop = d.shop,
                        event = "posted",
-                       created = appetsy.etsy_epoch(e.creation_epoch)).put()
+                       created = appetsy.etsy_epoch(e.creation_tsz)).put()
             else:
                 self.log("'%s' renewed" % d.title)
                 storage.Events(listing = d, shop = d.shop, event = "renewed").put()
 
-            d.ending = appetsy.etsy_epoch(e.ending_epoch)
+            d.ending = appetsy.etsy_epoch(e.ending_tsz)
             changes = True
 
         if d.price != float(e.price):
@@ -652,7 +692,9 @@ class ItemFavorersSync(Job):
 application = webapp.WSGIApplication([('/cron/shop', ShopFavorersSync),
                                       ('/cron/items', ItemFavorersSync),
                                       ('/cron/frontpage', FrontpageItemsSync),
-                                      ('/cron/itemfans', ItemFansSync)],
+                                      ('/cron/itemfans', ItemFansSync),
+                                      ('/cron/fan', FanSync)
+                                      ],
                                      debug=True)
 def main():
   run_wsgi_app(application)
