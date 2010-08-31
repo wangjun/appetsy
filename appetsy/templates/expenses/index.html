@@ -21,7 +21,7 @@
             },
         % endfor
     ]
-    
+
     balanceGraph.plot(balance_stats);
 </script>
 
@@ -33,21 +33,21 @@
                 <div style="color: silver">${months[date["month"]-1]}</div>
             </td>
         </tr>
-            
+
         % for money in date["moneys"]:
             <%
                 if money["date"] != prev_date:
                     odd = 1 - odd
-                
+
                 prev_date = money["date"]
-                
+
             %>
             <tr class="${stripes[odd]}">
                 <td class="date">${money["date"].strftime("%b %d")}</td>
                 <td style="padding: 0; width: 30px;">
                     % if money.get("listing"):
                         <a class="fan_clicker active_goods" key="${money["listing"].key()}">
-                            <img src="${money["listing"].image_url.replace("50x50", "25x25")}" />
+                            <img src="${money["listing"].image_url.replace("50x50", "25x25").replace("75x75", "25x25")}" />
                         </a>
                     % endif
                 </td>
@@ -58,12 +58,12 @@
                         ${money["name"]}
                     </a>
                 </td>
-                
+
                 <td class="money" style="white-space: nowrap" width="1%">${"%.2f Ls" % money["price"] if money["price"] < 0 else ""}</td>
                 <td class="money" style="white-space: nowrap" width="1%">${"%.2f Ls" % money["price"] if money["price"] > 0 else ""}</td>
             </tr>
 
-            
+
         % endfor
 
         <tr class="sum">
