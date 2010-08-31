@@ -109,13 +109,14 @@ class FanSync(Job):
 
         db_fan = storage.Fans.get_by_key_name(fan_id)
 
-        if fan_id == "_private":
-            db_fan.image_url = "/public/dejo_slepens_75x75.png"
-            db_fan.small_image_url = "/public/dejo_slepens_25x25.png"
-            db_fan.status = "private"
-        else:
+        etsy_fan = None
+        if fan_id != "_private":
             etsy_fan = self.etsy.getUser(fan_id, ["Profile", "Shops"])
 
+            if hasattr(etsy_fan, "Profile") == False:
+                etsy_fan = None
+
+        if etsy_fan:
             db_fan.user_name = etsy_fan.login_name
             db_fan.image_url = etsy_fan.Profile.image_url_75x75 or "/public/dejo_75x75.png"
             db_fan.small_image_url = db_fan.image_url
@@ -124,6 +125,11 @@ class FanSync(Job):
                 db_fan.url = "http://www.etsy.com/shop/%s" % etsy_fan.Shops[0].shop_name
                 db_fan.status = "seller"
             db_fan.joined_on = appetsy.etsy_epoch(etsy_fan.creation_tsz)
+
+        else:
+            db_fan.image_url = "/public/dejo_slepens_75x75.png"
+            db_fan.small_image_url = "/public/dejo_slepens_25x25.png"
+            db_fan.status = "private"
 
         logging.info("Added brand new fan: %s" % (db_fan.user_name or "secret"))
 
@@ -236,8 +242,6 @@ class ShopFavorersSync(Job):
         fans_added = 0
         fans = []
 
-
-
         try:
             shop_info = self.etsy.getUser(shop.shop_name, ["FavoredBy:100:%d" % offset])
             fans = shop_info.FavoredBy
@@ -348,6 +352,11 @@ class ItemInfoSync(Job):
             etsy_favorers_by_timestamp[appetsy.etsy_epoch(item.creation_tsz)] = item
         etsy_timestamps = set(etsy_favorers_by_timestamp.keys())
 
+        #update fan count for item
+        listing.faves = len(etsy_timestamps)
+        self.log(listing_info)
+        listing.image_url = listing_info.Images[0].url_75x75
+        listing.put()
 
         db_timestamps = memcache.get("listing:%d_fans" % listing.id)
         if not db_timestamps:
@@ -390,10 +399,6 @@ class ItemInfoSync(Job):
             self.log("  Removed fave: '%s'" % ex_favorer.fan.user_name)
             db.delete(ex_favorer)
 
-        #update fan count for item
-        listing.faves = len(etsy_timestamps)
-        listing.image_url = listing_info.Images[0].url_75x75
-        listing.put()
 
         pending = memcache.get("items_pending_refresh") or []
         if listing.id in pending:
@@ -558,9 +563,9 @@ class ItemFavorersSync(Job):
                         item.sold = dt.datetime.now()
 
                         if shop.currency == "LVL":
-                            item.price = round(float(details.price) * 0.520499888, 2) #exchange rate usd -> lvl feb-23-2010
+                            item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
                         else:
-                            item.price = float(details.price)
+                            item.price = float(item.listing.price)
 
                         item.put()
                         storage.Totals.add_income(listing.shop,
@@ -571,8 +576,13 @@ class ItemFavorersSync(Job):
                     mark_sold()
 
                 listing.sold_on = dt.datetime.now()
+
+                # sometimes the news that we have sold something come before
+                # the item is gone from the shop. save our item here to be sure
+                listing.put()
+                appetsy.invalidate_memcache("goods", str(d.shop.id)) #forget UI listings
             else:
-                self.log("Marked '%s' as %s." % (listing.title, listing.state))
+                self.log("Marking '%s' as %s." % (listing.title, listing.state))
 
             if self.__update_listing(listing, details):
                 listing.put()
@@ -656,36 +666,35 @@ class ItemFavorersSync(Job):
                 storage.Events(listing = d, shop = d.shop, event = d.state).put()
             changes = True
 
-        if e.state != "expired":
-            if d.title != e.title:
-                self.log("'%s' title --> '%s'" % (d.title, e.title))
-                d.title = e.title
-                changes = True
+        if hasattr(e, "title") and d.title != e.title:
+            self.log("'%s' title --> '%s'" % (d.title, e.title))
+            d.title = e.title
+            changes = True
 
-            if d.views != int(e.views):
-                views = int(e.views) - (d.views or 0)
-                self.log("'%s' views +%d" % (d.title, views))
-                d.views = int(e.views)
-                self.__add_exposure(d, views)
-                changes = True
+        if hasattr(e, "views") and d.views != int(e.views):
+            views = int(e.views) - (d.views or 0)
+            self.log("'%s' views +%d" % (d.title, views))
+            d.views = int(e.views)
+            self.__add_exposure(d, views)
+            changes = True
 
-            if  appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
-                if not d.ending:
-                    storage.Events(listing = d,
-                           shop = d.shop,
-                           event = "posted",
-                           created = appetsy.etsy_epoch(e.creation_tsz)).put()
-                else:
-                    self.log("'%s' renewed" % d.title)
-                    storage.Events(listing = d, shop = d.shop, event = "renewed").put()
+        if  hasattr(e, "ending") and appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
+            if not d.ending:
+                storage.Events(listing = d,
+                       shop = d.shop,
+                       event = "posted",
+                       created = appetsy.etsy_epoch(e.creation_tsz)).put()
+            else:
+                self.log("'%s' renewed" % d.title)
+                storage.Events(listing = d, shop = d.shop, event = "renewed").put()
 
-                d.ending = appetsy.etsy_epoch(e.ending_tsz)
-                changes = True
+            d.ending = appetsy.etsy_epoch(e.ending_tsz)
+            changes = True
 
-            if d.price != float(e.price):
-                self.log("'%s' price %.2f --> %.2f" % (e.title, (d.price or 0.0), float(e.price)))
-                d.price = float(e.price)
-                changes = True
+        if hasattr(e, "price") and d.price != float(e.price):
+            self.log("'%s' price %.2f --> %.2f" % (e.title, (d.price or 0.0), float(e.price)))
+            d.price = float(e.price)
+            changes = True
 
         if changes:
             memcache.set("listing:%d" % d.id, d) #store our memcache copy for next cron
