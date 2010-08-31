@@ -20,7 +20,7 @@ class Resource(object):
 
 
 class Etsy2(object):
-    base_url = "http://openapi.etsy.com/v2/sandbox/public"
+    base_url = "http://openapi.etsy.com/v2/public"
 
     def __init__(self, api_key):
         self.__api_key = api_key
@@ -58,6 +58,9 @@ class Etsy2(object):
             for include in includes:
                 if ":" in include:
                     include = include.split(":", 1)[0]
+
+                if include not in row:
+                    continue
 
                 if isinstance(row[include], list):
                     row[include] = [Resource(item) for item in row[include]]
