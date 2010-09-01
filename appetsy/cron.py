@@ -354,7 +354,6 @@ class ItemInfoSync(Job):
 
         #update fan count for item
         listing.faves = len(etsy_timestamps)
-        self.log(listing_info)
         listing.image_url = listing_info.Images[0].url_75x75
         listing.put()
 
@@ -596,7 +595,7 @@ class ItemFavorersSync(Job):
 
         #update our view counters
         if self.counters:
-            db.put([self.per_date, self.per_hour, self.per_date_hour])
+            db.put([self.per_date, self.per_hour, self.last_24])
 
 
         self.log("Updated!")
@@ -627,13 +626,20 @@ class ItemFavorersSync(Job):
                                                    name = "per_hour",
                                                    timestamp = dt.datetime.combine(dt.date(2000, 1, 1), dt.time(hour = now.hour)))
 
-        per_date_hour_key = "%d:per_date_hour-%s" % (shop.id, now.strftime("%Y%m%d%H"))
-        self.per_date_hour = memcache.get(per_date_hour_key)
-        if not self.per_date_hour:
-            self.per_date_hour = storage.Counters.get_or_insert(per_date_hour_key,
-                                                        shop = shop,
-                                                        name = "per_date_hour",
-                                                        timestamp = dt.datetime.combine(now.date(), dt.time(hour = now.hour)))
+        last_24_key = "%d:last_24-%s" % (shop.id, now.strftime("%H"))
+        self.last_24 = memcache.get(last_24_key)
+        this_hour = dt.datetime.combine(now.date(), dt.time(hour = now.hour))
+        if not self.last_24:
+            self.last_24 = storage.Counters.get_or_insert(last_24_key,
+                                                          shop = shop,
+                                                          name = "last_24",
+                                                          timestamp = this_hour)
+        if self.last_24.timestamp != this_hour:
+            # reset
+            self.last_24.timestamp = this_hour
+            self.last_24.count = 0
+            db.put(self.last_24)
+
         self.counters = True
 
     def __add_exposure(self, listing, delta_views):
@@ -649,8 +655,8 @@ class ItemFavorersSync(Job):
         self.per_hour.count += delta_views
         memcache.set(self.per_hour.key().name(), self.per_hour)
 
-        self.per_date_hour.count += delta_views
-        memcache.set(self.per_date_hour.key().name(), self.per_date_hour)
+        self.last_24.count += delta_views
+        memcache.set(self.last_24.key().name(), self.last_24)
 
         memcache.delete("recent_views_json", namespace = str(listing.shop.id))
 
@@ -678,7 +684,7 @@ class ItemFavorersSync(Job):
             self.__add_exposure(d, views)
             changes = True
 
-        if  hasattr(e, "ending") and appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
+        if  hasattr(e, "ending_tsz") and appetsy.zero_timezone(d.ending) != appetsy.etsy_epoch(e.ending_tsz):
             if not d.ending:
                 storage.Events(listing = d,
                        shop = d.shop,

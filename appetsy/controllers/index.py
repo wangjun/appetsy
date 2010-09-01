@@ -78,7 +78,7 @@ class IndexController(appetsy.Controller):
             return recent_views_json
 
         one_day = appetsy.strip_minutes(dt.datetime.now() - dt.timedelta(hours=23))
-        views = storage.Counters.all().filter("name =", "per_date_hour") \
+        views = storage.Counters.all().filter("name =", "last_24") \
                               .filter("shop =", self.shop) \
                               .filter("timestamp >=", one_day) \
                               .order("timestamp") \
