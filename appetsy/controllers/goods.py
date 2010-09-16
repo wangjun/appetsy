@@ -124,7 +124,7 @@ class GoodsController(appetsy.Controller):
 
         if status == "sold":
             sale_date = dt.datetime.strptime(self.request.get("sale_date"),
-                                             "%d-%b-%Y")
+                                             "%d-%b-%Y").replace(minute=1)
             price = float(self.request.get("price") or 0)
 
             if good.sold and good.price: #remove previous income
