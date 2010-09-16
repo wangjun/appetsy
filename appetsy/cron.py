@@ -303,7 +303,7 @@ class ShopFavorersSync(Job):
                 self.log("Nothing new in %d-%d range" % (offset, offset+100))
             elif fans_added > 0:
                 appetsy.invalidate_memcache("fans", namespace=str(shop.id))
-            if len(fans) == 100: #fetched all means there are more
+            if len(fans_added) == 100: # all new means there are more
                 self.log("There are more - going for next batch")
                 taskqueue.add(url='/cron/shop?shop=%d&page=%d' % (shop.id, page+1), method = 'get')
         finally:
@@ -506,7 +506,8 @@ class ItemFavorersSync(Job):
 
 
             new_views = etsy_listing.views - our_listing.views #update listing will update views too, so do check for new views here
-            if self.__update_listing(our_listing, etsy_listing):
+            changes = self.__update_listing(our_listing, etsy_listing)
+            if changes:
                 our_listing.put()
 
             if new_listing and goods_without_listings == []:  # if there is not a single good without listing there is nothing to match for the user
@@ -519,7 +520,7 @@ class ItemFavorersSync(Job):
                 our_listing.in_goods = True
                 our_listing.put()
 
-            if new_views: #go for fans if views don't match
+            if new_views or changes: #go for fans if views don't match
                 pending = memcache.get("items_pending_refresh") or []
                 if our_listing.id not in pending:
                     pending.append(our_listing.id)
@@ -557,29 +558,27 @@ class ItemFavorersSync(Job):
 
             elif details.state == "sold_out":
                 if item:
-                    def mark_sold(): #don't want to mark item as sold and not add income
-                        item.status = "sold"
-                        item.sold = dt.datetime.now()
+                    item.status = "sold"
+                    item.sold = dt.datetime.now()
 
-                        if shop.currency == "LVL":
-                            item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
-                        else:
-                            item.price = float(item.listing.price)
+                    if shop.currency == "LVL":
+                        item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
+                    else:
+                        item.price = float(item.listing.price)
 
-                        item.put()
-                        storage.Totals.add_income(listing.shop,
-                                                  appetsy.today(shop),
-                                                  item.price)
+                    item.put()
+                    storage.Totals.add_income(listing.shop,
+                                              appetsy.today(shop),
+                                              item.price)
 
-                        self.log("Marked '%s' as sold." % item.name)
-                    mark_sold()
+                    self.log("Marked '%s' as sold." % item.name)
 
                 listing.sold_on = dt.datetime.now()
 
                 # sometimes the news that we have sold something come before
                 # the item is gone from the shop. save our item here to be sure
                 listing.put()
-                appetsy.invalidate_memcache("goods", str(d.shop.id)) #forget UI listings
+                appetsy.invalidate_memcache("goods", str(shop.id)) #forget UI listings
             else:
                 self.log("Marking '%s' as %s." % (listing.title, listing.state))
 
