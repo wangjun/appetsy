@@ -508,7 +508,10 @@ class ItemFavorersSync(Job):
             new_views = etsy_listing.views - our_listing.views #update listing will update views too, so do check for new views here
             changes = self.__update_listing(our_listing, etsy_listing)
             if changes:
-                our_listing.put()
+                if our_listing.state == 'sold_out':
+                    self._mark_sold(our_listing, etsy_listing)
+                else:
+                    our_listing.put()
 
             if new_listing and goods_without_listings == []:  # if there is not a single good without listing there is nothing to match for the user
                 new_good = storage.Goods(name = our_listing.title,
@@ -520,7 +523,7 @@ class ItemFavorersSync(Job):
                 our_listing.in_goods = True
                 our_listing.put()
 
-            if new_views or changes: #go for fans if views don't match
+            if new_views: #go for fans if views don't match
                 pending = memcache.get("items_pending_refresh") or []
                 if our_listing.id not in pending:
                     pending.append(our_listing.id)
@@ -545,48 +548,24 @@ class ItemFavorersSync(Job):
                 listing.state = "unknown"
                 listing.put()
                 continue
-
-
             # look also for goods that reference this listing
             item = db.Query(storage.Goods).filter("listing =", listing).get()
-
-            if details.state == "removed":
-                if item:
-                    item.name = u"(deleted in etsy) %s" % item.name
-                    item.put()
-                    self.log("Marked '%s' as deleted." % item.name)
-
-            elif details.state == "sold_out":
-                if item:
-                    item.status = "sold"
-                    item.sold = dt.datetime.now()
-
-                    if shop.currency == "LVL":
-                        item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
-                    else:
-                        item.price = float(item.listing.price)
-
-                    item.put()
-                    storage.Totals.add_income(listing.shop,
-                                              appetsy.today(shop),
-                                              item.price)
-
-                    self.log("Marked '%s' as sold." % item.name)
-
-                listing.sold_on = dt.datetime.now()
-
-                # sometimes the news that we have sold something come before
-                # the item is gone from the shop. save our item here to be sure
-                listing.put()
-                appetsy.invalidate_memcache("goods", str(shop.id)) #forget UI listings
-            else:
-                self.log("Marking '%s' as %s." % (listing.title, listing.state))
 
             if self.__update_listing(listing, details):
                 listing.put()
 
+            if listing.state == "removed" and item:
+                item.name = u"(deleted in etsy) %s" % item.name
+                item.put()
+                self.log("Marked '%s' as deleted." % item.name)
+            elif listing.state == "sold_out":
+                self._mark_sold(listing, item or False)
+            else:
+                self.log("Marked '%s' as %s." % (listing.title, listing.state))
+
+
         if active_ids != etsy_ids or shop.listing_count != len(etsy_ids):
-            #listing count has changed let's update shop
+            # update count
             shop.listing_count = len(etsy_ids)
             shop.put()
 
@@ -605,6 +584,35 @@ class ItemFavorersSync(Job):
             favorers = ShopFavorersSync()
             favorers.initialize(self.request, self.response)
             favorers.get()
+
+    def _mark_sold(self, listing, item = None):
+        if listing.state != "sold_out":
+            return
+
+        if item is None:
+            item = db.Query(storage.Goods).filter("listing =", listing).get()
+
+        if item:
+            item.status = "sold"
+            item.sold = dt.datetime.now()
+
+            if shop.currency == "LVL":
+                item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
+            else:
+                item.price = float(item.listing.price)
+
+            item.put()
+            storage.Totals.add_income(item.shop,
+                                      appetsy.today(item.shop),
+                                      item.price)
+
+            self.log("Marked '%s' as sold." % item.name)
+
+        listing.sold_on = dt.datetime.now()
+
+        listing.put()
+        appetsy.invalidate_memcache("goods", str(item.shop.id)) #forget UI listings
+
 
     def __init_counters(self, shop):
         now = dt.datetime.now()
