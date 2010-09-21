@@ -303,7 +303,7 @@ class ShopFavorersSync(Job):
                 self.log("Nothing new in %d-%d range" % (offset, offset+100))
             elif fans_added > 0:
                 appetsy.invalidate_memcache("fans", namespace=str(shop.id))
-            if len(fans_added) == 100: # all new means there are more
+            if fans_added == 100: # all new means there are more
                 self.log("There are more - going for next batch")
                 taskqueue.add(url='/cron/shop?shop=%d&page=%d' % (shop.id, page+1), method = 'get')
         finally:
@@ -535,8 +535,9 @@ class ItemFavorersSync(Job):
         etsy_ids = set(["listing:%d" % listing.listing_id for listing in etsy_listings])
         active_ids = memcache.get("%d:etsy_active_ids" % shop.id)
         if not active_ids:
-            active_ids = storage.EtsyListings.all(keys_only = True).filter("shop =", shop) \
-                                           .filter("state =", "active").fetch(500)
+            active_ids = storage.EtsyListings.all(keys_only = True) \
+                                             .filter("shop =", shop) \
+                                             .filter("state =", "active").fetch(500)
             active_ids = set([key.name() for key in active_ids])
 
         for id in (active_ids - etsy_ids):
@@ -596,7 +597,7 @@ class ItemFavorersSync(Job):
             item.status = "sold"
             item.sold = dt.datetime.now()
 
-            if shop.currency == "LVL":
+            if item.shop.currency == "LVL":
                 item.price = round(float(item.listing.price) * 0.55789873, 2) #exchange rate usd -> lvl feb-23-2010
             else:
                 item.price = float(item.listing.price)
